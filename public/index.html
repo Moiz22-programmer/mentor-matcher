@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentorMatcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/atelier.css?v=readable3d">
+  <style>/* legacy overrides kept empty so inline theme vars still resolve */</style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-wrapper">
+      <div class="brand" onclick="showScreen('screen-landing')">
+        <div class="brand-logo">MM</div>
+        <div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="brand-title">MentorMatcher</div>
+            <span id="portal-indicator-badge" class="badge" style="display:none; cursor:pointer;" onclick="togglePortalMode()" title="Click to switch portal">Mentee</span>
+          </div>
+          <div class="brand-sub">Mentorship studio</div>
+        </div>
+      </div>
+      <div class="nav-buttons" id="nav-actions">
+        <button id="portal-switch-btn" class="btn btn-primary" style="display:none;" onclick="togglePortalMode()">Switch portal</button>
+        <button id="theme-toggle-btn" class="btn btn-secondary" onclick="toggleTheme()">Dark</button>
+        <button class="btn btn-secondary" onclick="showScreen('screen-login')">Login</button>
+        <button class="btn btn-primary" onclick="startRegistration()">Get started</button>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="container">
+
+    <!-- LANDING PAGE -->
+    <div id="screen-landing" class="screen active">
+      <div class="hero-atelier">
+        <div class="hero-copy">
+          <div class="eyebrow">Verified CS mentorship</div>
+          <h1 class="display">A quieter way to grow in software.</h1>
+          <p class="lede">Match with working engineers for 1-on-1 sessions, live review, and a studio that stays out of the way of the work.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="startRegistration()">Create your studio</button>
+            <button class="btn btn-secondary btn-lg" onclick="showScreen('screen-login')">I already have an account</button>
+          </div>
+          <div class="hero-points">
+            <article><h4>1-on-1 sessions</h4><p>Book live reviews with working engineers.</p></article>
+            <article><h4>Studio workspace</h4><p>Chat, tasks, and calls stay in one place.</p></article>
+            <article><h4>Verified mentors</h4><p>Match on skills, time, and how you like to learn.</p></article>
+          </div>
+        </div>
+        <div class="hero-stage" id="hero-stage">
+          <div class="hero-depth" aria-hidden="true">
+            <span class="orb orb-a"></span>
+            <span class="orb orb-b"></span>
+            <span class="slab slab-a"></span>
+            <span class="slab slab-b"></span>
+            <span class="slab slab-c"></span>
+          </div>
+          <div class="paper-card session-preview" id="hero-tilt">
+            <div class="kicker">Next session</div>
+            <h3>System design critique</h3>
+            <p class="session-meta">Thursday · 4:00 PM · 60 minutes</p>
+            <div class="session-foot">
+              <div class="avatar">AM</div>
+              <div>
+                <div class="session-name">Your mentor studio</div>
+                <div class="session-note">Live room, chat, and assigned work in one place</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="screen-login" class="screen">
+      <div class="auth-card">
+        <div class="auth-title">Welcome back</div>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group"><label class="form-label">Login as</label><div class="options-grid" style="grid-template-columns:1fr 1fr;"><label class="option-checkbox"><input type="radio" name="login-role" value="mentor" required> 👨‍🏫 Mentor</label><label class="option-checkbox"><input type="radio" name="login-role" value="mentee"> 👨‍🎓 Mentee</label></div></div>
+          <div class="form-group"><label class="form-label">Email</label><input type="email" id="login-email" class="form-input" required autocomplete="email"></div>
+          <div class="form-group"><label class="form-label">Password</label><input type="password" id="login-password" class="form-input" required autocomplete="current-password"></div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Login</button>
+          <button type="button" onclick="openPasswordReset()" style="width:100%; margin-top:14px; background:none; border:0; color:var(--accent); cursor:pointer; font:inherit;">Forgot password?</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ROLE SELECT -->
+    <div id="screen-role" class="screen">
+      <div class="auth-card">
+        <div style="text-align:center; margin-bottom:24px;">
+          <div style="font-family:var(--font-display); font-size:32px; font-weight:500; letter-spacing:-0.03em;">Select your studio</div>
+        </div>
+        <div class="role-grid">
+          <div class="role-card" id="role-card-mentor" onclick="selectRole('mentor')">
+            <div class="role-icon">👨‍🏫</div>
+            <div style="font-weight:700; font-size:18px;">Mentor</div>
+            <div style="font-size:12px; color:var(--text-muted);">Teach & offer CS services</div>
+          </div>
+          <div class="role-card" id="role-card-mentee" onclick="selectRole('mentee')">
+            <div class="role-icon">👨‍🎓</div>
+            <div style="font-weight:700; font-size:18px;">Mentee</div>
+            <div style="font-size:12px; color:var(--text-muted);">Learn & get mentored</div>
+          </div>
+        </div>
+        <button id="role-next-btn" class="btn btn-primary" style="width:100%; justify-content:center;" disabled onclick="proceedFromRole()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- MENTOR REGISTRATION (Steps 1 to 5) -->
+    <div id="screen-mentor-1" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Mentor Basic Details</h2>
+        <form onsubmit="handleMentorStep1(event)">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="mentor-fullname" class="form-input" required autocomplete="name"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" id="mentor-email" class="form-input" required autocomplete="email"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Create Password</label><input type="password" id="mentor-password" class="form-input" required minlength="8" autocomplete="new-password"></div>
+            <div class="form-group"><label class="form-label">Phone</label><input type="tel" id="mentor-phone" class="form-input" required></div>
+          </div>
+          <div class="form-group"><label class="form-label">Company / Title</label><input type="text" id="mentor-title" class="form-input" required></div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Services Offered →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentor-2" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:8px;">Your CS Specializations</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Choose at least 2 fields you can confidently mentor students in.</p>
+        <form onsubmit="handleMentorStep2(event)">
+          <div class="options-grid">
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Backend Development" checked> Backend Development</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Frontend Development"> Frontend Development</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Mobile Development"> Mobile Development</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="DevOps & Cloud"> DevOps & Cloud</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Data Science & AI/ML"> Data Science & AI/ML</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Database Design"> Database Design</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="System Design & Architecture" checked> System Design</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Web3 & Blockchain"> Web3 & Blockchain</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Cybersecurity"> Cybersecurity</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="QA & Testing"> QA & Testing</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="UI/UX Design"> UI/UX Design</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Game Development"> Game Development</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Embedded Systems & IoT"> Embedded Systems & IoT</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="AR/VR Development"> AR/VR Development</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Product Management"> Product Management</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-fields" value="Technical Interview Preparation"> Interview Preparation</label>
+          </div>
+          <label class="form-label" style="margin-top:20px;">Mentoring Services</label>
+          <div class="options-grid" style="grid-template-columns:1fr;">
+            <label class="option-checkbox"><input type="checkbox" name="mentor-services" value="1-on-1 Code Review" checked> 💻 1-on-1 Code Review</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-services" value="Mock Interviews" checked> 🚀 Technical Mock Interviews</label>
+            <label class="option-checkbox"><input type="checkbox" name="mentor-services" value="System Design" checked> 📐 System Architecture Design</label>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Experience & Languages →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentor-3" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Experience & Languages</h2>
+        <form onsubmit="handleMentorStep3(event)">
+          <div class="form-group">
+            <label class="form-label">Professional Experience</label>
+            <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 12px;">How long have you worked in your selected fields?</p>
+            <div class="options-grid">
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="Less than 1 year"> Less than 1 year</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="1-2 years"> 1 - 2 years</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="2-3 years"> 2 - 3 years</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="3-5 years"> 3 - 5 years</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="5-8 years" checked> 5 - 8 years</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="8-10 years"> 8 - 10 years</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="10-15 years"> 10 - 15 years</label>
+              <label class="option-checkbox"><input type="radio" name="mentor-exp" value="15+ years"> 15+ years</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Languages & Technologies You Know</label>
+            <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 12px;">Select every language or technology you work with.</p>
+            <div class="options-grid">
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="TypeScript" checked> TypeScript</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Python" checked> Python</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="JavaScript"> JavaScript</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Java"> Java</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="C++"> C++</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="C#"> C#</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Go"> Go</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Rust"> Rust</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="PHP"> PHP</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Ruby"> Ruby</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Kotlin"> Kotlin</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Swift"> Swift</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Dart"> Dart</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="SQL"> SQL</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="HTML & CSS"> HTML & CSS</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="React"> React</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Node.js"> Node.js</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="Docker"> Docker</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-langs" value="AWS"> AWS</label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Pricing Model →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentor-4" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Pricing Model</h2>
+        <form onsubmit="handleMentorStep4(event)">
+          <div class="form-group">
+            <div class="options-grid" style="grid-template-columns:1fr;">
+              <label class="option-checkbox" onclick="togglePricingRateInput('free')"><input type="radio" name="mentor-pricing" value="free"> 🎁 Free Pro Bono</label>
+              <label class="option-checkbox" onclick="togglePricingRateInput('paid')"><input type="radio" name="mentor-pricing" value="paid" checked> 💵 Paid Hourly Rate ($50/hr)</label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Calendar Slots →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentor-5" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Calendar Availability</h2>
+        <form onsubmit="handleMentorStep5(event)">
+          <div class="form-group">
+            <label class="form-label">Open Call Slots</label>
+            <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 12px;">Select every weekly time when students can book a session.</p>
+            <div class="options-grid">
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Mon 10:00 AM" checked> Mon 10:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Mon 2:00 PM"> Mon 2:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Mon 7:00 PM"> Mon 7:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Tue 10:00 AM"> Tue 10:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Tue 3:00 PM"> Tue 3:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Tue 7:00 PM"> Tue 7:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Wed 10:00 AM"> Wed 10:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Wed 2:00 PM" checked> Wed 2:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Wed 7:00 PM"> Wed 7:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Thu 10:00 AM"> Thu 10:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Thu 3:00 PM"> Thu 3:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Thu 7:00 PM"> Thu 7:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Fri 10:00 AM"> Fri 10:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Fri 2:00 PM"> Fri 2:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Fri 6:00 PM"> Fri 6:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Sat 11:00 AM"> Sat 11:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Sat 3:00 PM"> Sat 3:00 PM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Sun 11:00 AM"> Sun 11:00 AM</label>
+              <label class="option-checkbox"><input type="checkbox" name="mentor-slots" value="Sun 4:00 PM"> Sun 4:00 PM</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Session Duration</label>
+            <select id="mentor-session-duration" class="form-select">
+              <option value="30 minutes">30 minutes</option>
+              <option value="45 minutes">45 minutes</option>
+              <option value="60 minutes" selected>60 minutes</option>
+              <option value="90 minutes">90 minutes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Maximum Active Mentees</label>
+            <select id="mentor-capacity" class="form-select">
+              <option value="2">2 mentees</option>
+              <option value="3" selected>3 mentees</option>
+              <option value="5">5 mentees</option>
+              <option value="8">8 mentees</option>
+              <option value="10">10+ mentees</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Complete & Launch Dashboard ✓</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 5-STEP MENTEE REGISTRATION WORKFLOW -->
+    <div id="screen-mentee-1" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Step 1: Mentee Details</h2>
+        <form onsubmit="handleMenteeStep1(event)">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="mentee-fullname" class="form-input" required autocomplete="name"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" id="mentee-email" class="form-input" required autocomplete="email"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Create Password</label><input type="password" id="mentee-password" class="form-input" required minlength="8" autocomplete="new-password"></div>
+            <div class="form-group"><label class="form-label">Phone</label><input type="tel" id="mentee-phone" class="form-input" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Current role or study level</label><input type="text" id="mentee-role" class="form-input" required placeholder="Example: CS student, junior developer"></div>
+            <div class="form-group"><label class="form-label">Location & timezone</label><input type="text" id="mentee-location" class="form-input" required placeholder="Example: Lahore, Pakistan · PKT"></div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Learning Goals →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentee-2" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Step 2: CS Learning Goals</h2>
+        <form onsubmit="handleMenteeStep2(event)">
+          <p style="color:var(--text-muted); font-size:13px; margin:-4px 0 12px;">Choose the areas where you want mentorship.</p><div class="options-grid">
+            <label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="Frontend Development"> Frontend Development</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="Backend Development"> Backend Development</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="Mobile Development"> Mobile Development</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="Data Science & AI/ML"> AI / Machine Learning</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="DevOps & Cloud"> DevOps & Cloud</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="System Design & Architecture"> System Design</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="Cybersecurity"> Cybersecurity</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="UI/UX Design"> UI/UX Design</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="DSA & Problem Solving"> DSA & Problem Solving</label><label class="option-checkbox"><input type="checkbox" name="mentee-interests" value="Technical Interview Preparation"> Interview Preparation</label></div>
+          <div class="form-group" style="margin-top:18px;"><label class="form-label">Skills and tools you already use</label><input id="mentee-skills" class="form-input" placeholder="Example: HTML, CSS, JavaScript, Figma (separate with commas)"></div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Target Goal & Deadline →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentee-3" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Step 3: Target Career Goal</h2>
+        <form onsubmit="handleMenteeStep3(event)">
+          <div class="form-group"><label class="form-label">Target Goal</label><input type="text" id="mentee-goal" class="form-input" required placeholder="Example: Become job-ready for frontend internships"></div>
+          <div class="form-group">
+            <label class="form-label">Experience Level</label>
+            <select id="mentee-level" class="form-select"><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Target timeline</label><select id="mentee-timeline" class="form-select"><option value="1 month">Within 1 month</option><option value="3 months">Within 3 months</option><option value="6 months">Within 6 months</option><option value="Flexible">Flexible</option></select></div>
+          <div class="form-group"><label class="form-label">What support do you need most?</label><textarea id="mentee-support" class="form-textarea" rows="3" placeholder="Example: weekly accountability, portfolio feedback, mock interviews"></textarea></div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Mentorship Budget →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentee-4" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:16px;">Step 4: Mentorship Preference</h2>
+        <form onsubmit="handleMenteeStep4(event)">
+          <div class="options-grid" style="grid-template-columns:1fr;">
+            <label class="option-checkbox"><input type="radio" name="mentee-budget" value="free"> 🎁 Free Pro Bono Mentors</label>
+            <label class="option-checkbox"><input type="radio" name="mentee-budget" value="paid" checked> 💵 Paid Mentors (up to $50/hr)</label>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Next: Find Mentor →</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="screen-mentee-5" class="screen">
+      <div class="auth-card">
+        <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:12px;">Step 5: Match Mentor</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+          <input type="text" id="mentor-search-input" class="form-input" placeholder="Search..." oninput="renderMentorSelectionList()">
+          <select id="mentor-skill-filter" class="form-select" onchange="renderMentorSelectionList()"><option value="ALL">All Skills</option></select>
+        </div>
+        <div id="mentee-mentor-selection-list"></div>
+        <button onclick="handleMenteeStep5()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:16px;">Complete & Launch Dashboard ✓</button>
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MENTOR DASHBOARD                           -->
+    <!-- ========================================== -->
+    <div id="screen-dashboard-mentor" class="screen">
+      <div class="dashboard-shell">
+        <aside class="app-sidebar">
+          <div class="sidebar-kicker">Mentor studio</div>
+          <div class="dashboard-nav-tabs">
+            <button class="tab-btn tab-btn-mentor active" id="tab-btn-mentor-home" onclick="switchTab('mentor', 'home')">Overview</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-messages" onclick="switchTab('mentor', 'messages')">Chat</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-mails" onclick="switchTab('mentor', 'mails')">Inbox</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-videocall" onclick="switchTab('mentor', 'videocall')">Live room</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-mentees" onclick="switchTab('mentor', 'mentees')">Mentees</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-work" onclick="switchTab('mentor', 'work')">Assign work</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-activity" onclick="switchTab('mentor', 'activity')">Activity</button>
+            <button class="tab-btn tab-btn-mentor" id="tab-btn-mentor-settings" onclick="switchTab('mentor', 'settings')">Settings</button>
+          </div>
+        </aside>
+        <div class="dashboard-layout">
+        <div class="dashboard-header">
+          <div class="page-heading">
+            <h2 id="dash-mentor-name">Ali Ahmed</h2>
+            <p id="dash-mentor-title-sub">Senior Software Lead</p>
+          </div>
+        </div>
+
+
+        <!-- MENTOR TAB: OVERVIEW -->
+        <div id="tab-view-mentor-home" class="tab-content-mentor">
+          <div class="metric-grid">
+            <div class="dash-card metric-card"><div class="metric-label">Active mentees</div><div class="stat-number" id="stat-mentor-active-mentees">2</div></div>
+            <div class="dash-card metric-card"><div class="metric-label">Active today</div><div class="stat-number" id="stat-mentor-active-today">0</div></div>
+            <div class="dash-card metric-card"><div class="metric-label">Earnings</div><div class="stat-number" id="stat-mentor-earnings">$100</div></div>
+            <div class="dash-card metric-card"><div class="metric-label">Sessions booked</div><div class="stat-number" id="stat-mentor-sessions">1</div></div>
+          </div>
+          <div class="overview-layout"><div class="dash-card"><div class="dash-card-title">Upcoming sessions <button class="btn btn-secondary" style="padding:6px 10px; font-size:12px;" onclick="switchTab('mentor','mentees')">Manage</button></div><div id="mentor-overview-sessions"></div></div><div class="dash-card"><div class="dash-card-title">Quick actions</div><button class="quick-action" onclick="switchTab('mentor','work')"><span>Assign learning work</span><span>→</span></button><button class="quick-action" onclick="switchTab('mentor','mails')"><span>Message a student</span><span>→</span></button><button class="quick-action" onclick="switchTab('mentor','activity')"><span>View daily activity</span><span>→</span></button><button class="quick-action" onclick="switchTab('mentor','videocall')"><span>Start a video call</span><span>→</span></button></div></div>
+        </div>
+
+        <!-- MENTOR TAB: STUDENT CHAT -->
+        <div id="tab-view-mentor-messages" class="tab-content-mentor" style="display:none;">
+          <div class="dash-card">
+            <div class="dash-card-title">Chat with mentees</div>
+            <div class="form-group"><label class="form-label">Chat with</label><select id="mentor-chat-recipient" class="form-select" onchange="selectMentorChatRecipient(this.value)"></select></div>
+            <div id="chat-messages-mentor"></div>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="chat-input-mentor" class="form-input" placeholder="Write a message" onkeydown="if(event.key==='Enter') handleSendMessage('mentor')">
+              <button class="btn btn-primary" onclick="handleSendMessage('mentor')">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENTOR TAB: MAILS INBOX -->
+        <div id="tab-view-mentor-mails" class="tab-content-mentor" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">🔔 Student Inquiries & Mail Inbox <button class="btn btn-primary" style="padding:7px 12px; font-size:12px;" onclick="openEmailComposer('mentor')">✉️ Compose Email</button></div><div id="mentor-mails-list"></div></div>
+        </div>
+
+        <!-- MENTOR TAB: WHATSAPP-STYLE VIDEO CALL ROOM -->
+        <div id="tab-view-mentor-videocall" class="tab-content-mentor" style="display:none;">
+          <div class="dash-card">
+            <div class="dash-card-title">🎥 Reliable Live Video Call</div>
+            <p style="font-size:13px; color:var(--text-muted); margin:-8px 0 16px;">Start a reliable HD video call with your mentees. Camera, microphone, screen sharing, and connection relays are built in.</p>
+
+            <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="openCallMemberPicker('start')">📞 Select Student to Call</button>
+              <button class="btn btn-secondary" onclick="inviteStudentsToActiveCall()">➕ Add to Active Call</button>
+            </div>
+            <div id="active-meeting-link" style="display:none; margin-bottom:16px; padding:12px; border-radius:12px; background:rgba(6,182,212,.1); font-size:13px;"></div>
+
+            <div style="display:grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); gap:20px; align-items:start;" class="video-call-grid-layout">
+              <div>
+                <!-- NATIVE WEBRTC VIDEO CONTAINER -->
+                <div id="native-video-box-mentor" style="display:none; position:relative; width:100%; min-height:500px; border-radius:24px; overflow:hidden; background:#090D16; border:1px solid var(--border-glow); box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+                  <video id="remote-video-mentor" autoplay playsinline style="position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; background:#090D16;"></video>
+                  <video id="local-video-mentor" autoplay playsinline muted style="position:absolute; bottom:20px; right:20px; width:180px; height:135px; object-fit:cover; border-radius:14px; border:2px solid var(--primary-cyan); background:#1E293B; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:10;"></video>
+                  <div style="position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.6); padding:6px 14px; border-radius:30px; backdrop-filter:blur(8px); font-size:13px; font-weight:700; color:#34D399; display:flex; align-items:center; gap:8px;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#34D399; display:inline-block;"></span>
+                    <span>Live Call</span>
+                    <span id="v-duration-mentor" style="color:#FFF; font-weight:500;">00:00</span>
+                  </div>
+                </div>
+
+                <!-- CONTROLS -->
+                <div id="real-call-controls" class="dash-card" style="display:none; margin-top:16px;">
+                  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px;">
+                    <button id="native-mic-btn-mentor" class="btn btn-secondary" onclick="toggleNativeMic('mentor')">🎙️ Mic On</button>
+                    <button id="native-cam-btn-mentor" class="btn btn-secondary" onclick="toggleNativeCam('mentor')">📹 Cam On</button>
+                    <button class="btn btn-secondary" onclick="shareNativeScreen('mentor')">🖥️ Share Screen</button>
+                    <button class="btn btn-danger" onclick="endRealVideoCall()">End Call 🔴</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LIVE AI MENTOR SIDEBAR (MENTOR) -->
+              <div id="ai-mentor-sidebar-mentor" class="dash-card" style="display:none; border-color:rgba(139,92,246,.45); background:linear-gradient(135deg, rgba(124,58,237,.22), rgba(6,182,212,.12));">
+                <div class="dash-card-title"><span>✨ Live AI Mentor</span><span id="ai-mentor-status-mentor" style="font-size:12px; color:#94A3B8;">Offline</span></div>
+                <div id="ai-mentor-suggestions-mentor" style="min-height:72px; font-size:14px; color:var(--text-muted);">Waiting for conversation…</div>
+                <div style="margin-top:10px;">
+                  <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Call Language:</label>
+                  <select id="ai-mentor-language-mentor" onchange="updateLiveAiLanguage()" style="width:100%; padding:8px; border-radius:8px; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); font-size:13px;">
+                    <option value="">Auto-detect</option>
+                    <option value="ur">Urdu (اردو)</option>
+                    <option value="en">English</option>
+                    <option value="hi">Hindi (हिन्दी)</option>
+                    <option value="ar">Arabic (العربية)</option>
+                  </select>
+                </div>
+                <button id="ai-mentor-toggle-mentor" type="button" class="btn btn-secondary" style="margin-top:12px; width:100%; justify-content:center;" onclick="toggleLiveAiListening()">🎧 Turn on AI listening</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MENTOR TAB: MENTEES -->
+        <div id="tab-view-mentor-mentees" class="tab-content-mentor" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">👥 Mentees Roster</div><div id="mentor-mentees-list"></div></div>
+        </div>
+
+        <div id="tab-view-mentor-work" class="tab-content-mentor" style="display:none;">
+          <div class="dash-card">
+            <div class="dash-card-title"><span>📝 Create Learning Work</span> <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-size:12px; border-color:var(--border-glow); color:var(--primary-cyan);" onclick="openAiAssignmentModal()">✨ AI Auto-Generate</button></div>
+            <p style="font-size:13px; color:var(--text-muted); margin:-8px 0 20px;">Assign homework, a quiz, code snippets, PDFs, or images to an individual mentee.</p>
+
+            <form onsubmit="handleCreateLearningItem(event)">
+              <div class="form-group"><label class="form-label">Assign to</label><select id="work-mentee-select" class="form-select" required></select></div>
+              <div class="form-group"><label class="form-label">Content type</label><select id="work-type-select" class="form-select" onchange="handleWorkTypeChange()"><option value="assignment">Assignment / Homework</option><option value="quiz">Quiz</option><option value="snippet">Code Snippet</option><option value="material">Learning Material</option></select></div>
+              <div class="form-group"><label class="form-label">Title</label><input id="work-title" class="form-input" required placeholder="Example: Build an authentication API"></div>
+              <div class="form-group"><label class="form-label" id="work-description-label">Instructions</label><textarea id="work-description" class="form-textarea" rows="4" required placeholder="Explain what the student needs to complete."></textarea></div>
+              <div class="form-group" id="work-code-group" style="display:none;"><label class="form-label">Code snippet</label><textarea id="work-code" class="form-textarea" rows="7" placeholder="Paste a code example, boilerplate, or solution reference."></textarea></div>
+              <div class="form-group" id="work-deadline-group"><label class="form-label">Deadline (optional)</label><input id="work-deadline" type="date" class="form-input"></div>
+              <div class="form-group"><label class="form-label">Attach PDF or image (optional)</label><input id="work-attachment" type="file" class="form-input" accept="application/pdf,image/*"><p style="font-size:12px; color:var(--text-muted); margin-top:6px;">For this demo, attachments up to 1 MB are saved securely in this browser.</p></div>
+              <button class="btn btn-primary" type="submit" style="width:100%; justify-content:center;">Send to Mentee</button>
+            </form>
+          </div>
+          <div class="dash-card" style="margin-top:20px;"><div class="dash-card-title">📚 Work You Assigned</div><div id="mentor-learning-items"></div></div>
+        </div>
+
+        <div id="tab-view-mentor-activity" class="tab-content-mentor" style="display:none;">
+          <div class="dash-card">
+            <div class="dash-card-title">📈 Daily Student Work Monitor <span style="font-size:12px; color:var(--text-muted); font-weight:500;" id="activity-monitor-date"></span></div>
+            <p style="font-size:13px; color:var(--text-muted); margin:-8px 0 20px;">Monitor student work completed today, recent updates, and activity level. Scores reset every day.</p>
+            <div id="mentor-activity-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px;"></div>
+          </div>
+          <div class="dash-card" style="margin-top:20px;"><div class="dash-card-title">🕒 Recent Student Activity</div><div id="mentor-activity-feed"></div></div>
+        </div>
+
+        <div id="tab-view-mentor-settings" class="tab-content-mentor" style="display:none;"><div class="dash-card"><div class="dash-card-title">Profile settings</div><div id="mentor-settings-content"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- MENTEE DASHBOARD                           -->
+    <!-- ========================================== -->
+    <div id="screen-dashboard-mentee" class="screen">
+      <div class="dashboard-shell">
+        <aside class="app-sidebar">
+          <div class="sidebar-kicker">Learner studio</div>
+          <div class="dashboard-nav-tabs">
+            <button class="tab-btn tab-btn-mentee active" id="tab-btn-mentee-home" onclick="switchTab('mentee', 'home')">Journey</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-messages" onclick="switchTab('mentee', 'messages')">Chat</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-mails" onclick="switchTab('mentee', 'mails')">Inbox</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-videocall" onclick="switchTab('mentee', 'videocall')">Live room</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-sessions" onclick="switchTab('mentee', 'sessions')">Sessions</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-challenges" onclick="switchTab('mentee', 'challenges')">Challenges</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-resources" onclick="switchTab('mentee', 'resources')">Resources</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-work" onclick="switchTab('mentee', 'work')">Tasks</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-reports" onclick="switchTab('mentee', 'reports')">Feedback</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-activity" onclick="switchTab('mentee', 'activity')">Activity</button>
+            <button class="tab-btn tab-btn-mentee" id="tab-btn-mentee-settings" onclick="switchTab('mentee', 'settings')">Settings</button>
+          </div>
+        </aside>
+        <div class="dashboard-layout">
+        <div class="dashboard-header">
+          <div class="page-heading">
+            <h2 id="dash-mentee-name">Moiz Hussain</h2>
+            <p>Mentee</p>
+          </div>
+        </div>
+
+
+        <!-- MENTEE TAB: HOME -->
+        <div id="tab-view-mentee-home" class="tab-content-mentee">
+          <div class="student-overview-grid">
+          <div class="dash-card student-hero" style="margin-bottom:20px;">
+            <div class="dash-card-title"><span>Your journey</span><span class="badge badge-available" id="dash-journey-score">Score: 7/10</span></div>
+            <div style="font-size:16px; font-weight:700;" id="dash-journey-goal">Goal: Get React internship in 3 months</div>
+            <div class="progress-track"><div class="progress-fill" id="dash-journey-progress-bar" style="width:45%;"></div></div>
+            <button class="btn btn-primary" style="margin-top:10px;" onclick="openEmailComposer('mentee')">Send a work update</button>
+          </div>
+          <div class="dash-card" style="margin-bottom:20px;"><div class="dash-card-title">Your next steps</div><div id="mentee-overview-next"></div><button class="btn btn-secondary" style="width:100%; justify-content:center; margin-top:16px;" onclick="switchTab('mentee','work')">Open My Tasks</button></div>
+          </div>
+        </div>
+
+        <!-- MENTEE TAB: DIRECT CHAT -->
+        <div id="tab-view-mentee-messages" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card">
+            <div class="dash-card-title">Chat with your mentor</div>
+            <div id="chat-messages-mentee"></div>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="chat-input-mentee" class="form-input" placeholder="Write a message" onkeydown="if(event.key==='Enter') handleSendMessage('mentee')">
+              <button class="btn btn-primary" onclick="handleSendMessage('mentee')">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENTEE TAB: MAILS INBOX -->
+        <div id="tab-view-mentee-mails" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">📥 Emails from Your Mentor <button class="btn btn-primary" style="padding:7px 12px; font-size:12px;" onclick="openEmailComposer('mentee')">✉️ Send Email</button></div><div id="mentee-mails-list"></div></div>
+        </div>
+
+        <!-- MENTEE TAB: NATIVE WEBRTC VIDEO CALL ROOM -->
+        <div id="tab-view-mentee-videocall" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card student-hero" style="margin-bottom:20px;">
+            <div class="dash-card-title">🎥 Reliable Live Video Call</div>
+            <p style="font-size:13px; color:var(--text-muted); margin:-8px 0 16px;">Start a reliable HD video call with <strong id="mentee-call-mentor-name">your mentor</strong>. Camera and microphone controls are built in.</p>
+            <button class="btn btn-primary" onclick="openStudentCallPicker()">📞 Choose Who to Call</button>
+            <div id="mentee-active-meeting-link" style="display:none; margin-top:16px; padding:12px; border-radius:12px; background:rgba(6,182,212,.1); font-size:13px;"></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); gap:20px; align-items:start;" class="video-call-grid-layout">
+            <div>
+              <!-- NATIVE WEBRTC VIDEO CONTAINER -->
+              <div id="native-video-box-mentee" style="display:none; position:relative; width:100%; min-height:500px; border-radius:24px; overflow:hidden; background:#090D16; border:1px solid var(--border-glow); box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+                <video id="remote-video-mentee" autoplay playsinline style="position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:cover; background:#090D16;"></video>
+                <video id="local-video-mentee" autoplay playsinline muted style="position:absolute; bottom:20px; right:20px; width:180px; height:135px; object-fit:cover; border-radius:14px; border:2px solid var(--primary-cyan); background:#1E293B; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:10;"></video>
+                <div style="position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.6); padding:6px 14px; border-radius:30px; backdrop-filter:blur(8px); font-size:13px; font-weight:700; color:#34D399; display:flex; align-items:center; gap:8px;">
+                  <span style="width:8px; height:8px; border-radius:50%; background:#34D399; display:inline-block;"></span>
+                  <span>Live Call</span>
+                  <span id="v-duration-mentee" style="color:#FFF; font-weight:500;">00:00</span>
+                </div>
+              </div>
+
+              <div id="mentee-real-call-controls" class="dash-card" style="display:none; margin-top:16px;">
+                <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px;">
+                  <button id="native-mic-btn-mentee" class="btn btn-secondary" onclick="toggleNativeMic('mentee')">🎙️ Mic On</button>
+                  <button id="native-cam-btn-mentee" class="btn btn-secondary" onclick="toggleNativeCam('mentee')">📹 Cam On</button>
+                  <button class="btn btn-secondary" onclick="shareNativeScreen('mentee')">🖥️ Share Screen</button>
+                  <button class="btn btn-danger" onclick="endStudentVideoCall()">End Call 🔴</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIVE AI MENTOR SIDEBAR (MENTEE) -->
+            <div id="ai-mentor-sidebar" class="dash-card" style="display:none; border-color:rgba(139,92,246,.45); background:linear-gradient(135deg, rgba(124,58,237,.22), rgba(6,182,212,.12));">
+              <div class="dash-card-title"><span>✨ Live AI Mentor</span><span id="ai-mentor-status" style="font-size:12px; color:#94A3B8;">Offline</span></div>
+              <div id="ai-mentor-suggestions" style="min-height:72px; font-size:14px; color:var(--text-muted);">Waiting for conversation…</div>
+              <div style="margin-top:10px;">
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Call Language:</label>
+                <select id="ai-mentor-language" onchange="updateLiveAiLanguage()" style="width:100%; padding:8px; border-radius:8px; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); font-size:13px;">
+                  <option value="">Auto-detect</option>
+                  <option value="ur">Urdu (اردو)</option>
+                  <option value="en">English</option>
+                  <option value="hi">Hindi (हिन्दी)</option>
+                  <option value="ar">Arabic (العربية)</option>
+                </select>
+              </div>
+              <button id="ai-mentor-toggle" type="button" class="btn btn-secondary" style="margin-top:12px; width:100%; justify-content:center;" onclick="toggleLiveAiListening()">🎧 Turn on AI listening</button>
+              <div id="ai-mentor-capture-help" style="font-size:12px; line-height:1.5; color:var(--text-muted); margin-top:10px;">When asked, select the video-call tab and tick <strong>Share tab audio</strong>. Your microphone is mixed in too, so the assistant can follow both sides of the conversation.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENTEE TAB: SESSIONS -->
+        <div id="tab-view-mentee-sessions" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">📅 Scheduled Sessions</div><div id="mentee-sessions-list"></div></div>
+        </div>
+
+        <!-- MENTEE TAB: CHALLENGES -->
+        <div id="tab-view-mentee-challenges" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">🎯 Coding Challenges</div><div id="mentee-challenges-list"></div></div>
+        </div>
+
+        <!-- MENTEE TAB: RESOURCES -->
+        <div id="tab-view-mentee-resources" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">📚 Learning Resources</div><div id="mentee-resources-list"></div></div>
+        </div>
+
+        <div id="tab-view-mentee-work" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">📝 Tasks & Materials from Mentor</div><div id="mentee-learning-items"></div></div>
+        </div>
+
+        <!-- MENTEE TAB: REPORTS -->
+        <div id="tab-view-mentee-reports" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">📧 Feedback Reports</div><div id="mentee-reports-list"></div></div>
+        </div>
+
+        <div id="tab-view-mentee-activity" class="tab-content-mentee" style="display:none;">
+          <div class="dash-card"><div class="dash-card-title">📈 My Daily Learning Activity</div><div id="mentee-activity-summary"></div></div>
+        </div>
+
+        <div id="tab-view-mentee-settings" class="tab-content-mentee" style="display:none;"><div class="dash-card"><div class="dash-card-title">Profile settings</div><div id="mentee-settings-content"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-email-composer" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-email-composer')">✕</button>
+        <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">✉️ AI Email Assistant</h2>
+        <p id="email-composer-recipient" style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"></p>
+        <form onsubmit="sendAutomatedEmail(event)">
+          <div class="form-group" id="email-recipient-picker" style="display:none;"><label class="form-label">Send to student</label><select id="email-composer-recipient-select" class="form-select" onchange="changeEmailRecipient(this.value)"></select></div>
+          <div class="form-group"><label class="form-label">What would you like to say?</label><textarea id="email-composer-summary" class="form-textarea" rows="6" required placeholder="Example: I completed the authentication assignment, added validation tests, and would like feedback on my API structure."></textarea></div>
+          <div class="form-group"><label class="form-label">Email type</label><select id="email-composer-type" class="form-select"><option value="work-update">Work update</option><option value="feedback">Feedback</option><option value="reminder">Reminder</option><option value="general">General message</option></select></div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">✨ Create & Send Email</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="modal-email-reader" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-email-reader')">✕</button>
+        <div id="email-reader-content"></div>
+        <div style="display:flex; gap:10px; margin-top:24px;"><button id="email-reader-reply" class="btn btn-primary">✉️ AI Reply</button><button class="btn btn-secondary" onclick="closeModal('modal-email-reader')">Close</button></div>
+      </div>
+    </div>
+
+    <div id="modal-coding-challenge" class="modal-overlay">
+      <div class="modal-card" style="max-width:860px;">
+        <button class="modal-close" onclick="closeModal('modal-coding-challenge')">✕</button>
+        <h2 id="challenge-modal-title" style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">Coding Challenge</h2>
+        <p id="challenge-modal-description" style="color:var(--text-muted); font-size:14px; margin-bottom:18px;"></p>
+        <form onsubmit="submitChallengeSolution(event)">
+          <div class="form-group"><label class="form-label">Your solution</label><textarea id="challenge-code-editor" class="form-textarea" rows="15" spellcheck="false" style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; line-height:1.5; resize:vertical;"></textarea></div>
+          <div id="challenge-submit-status" style="font-size:13px; color:var(--text-muted); margin:-4px 0 16px;"></div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;"><button type="button" class="btn btn-secondary" onclick="closeModal('modal-coding-challenge')">Save for Later</button><button type="submit" class="btn btn-primary">Submit Solution 🚀</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div id="modal-shared-resource" class="modal-overlay">
+      <div class="modal-card" style="max-width:760px;">
+        <button class="modal-close" onclick="closeModal('modal-shared-resource')">✕</button>
+        <h2 id="shared-resource-title" style="font-family:var(--font-heading); font-size:24px; margin-bottom:14px;">Shared Resource</h2>
+        <div id="shared-resource-content"></div>
+      </div>
+    </div>
+
+    <div id="modal-student-call-picker" class="modal-overlay">
+      <div class="modal-card" style="max-width:620px;">
+        <button class="modal-close" onclick="closeModal('modal-student-call-picker')">✕</button>
+        <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">Who do you want to call?</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">Choose your mentor or another mentee registered on MentorMatcher.</p>
+        <div id="student-call-picker-list" class="options-grid" style="grid-template-columns:1fr;"></div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:14px;" onclick="confirmStudentCallPicker()">Start Call</button>
+      </div>
+    </div>
+
+    <div id="modal-password-reset" class="modal-overlay">
+      <div class="modal-card" style="max-width:560px;">
+        <button class="modal-close" onclick="closeModal('modal-password-reset')">✕</button>
+        <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">Reset your password</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">Works for both mentors and mentees. We will email a six-digit verification code.</p>
+        <form onsubmit="requestPasswordReset(event)">
+          <div class="form-group"><label class="form-label">Account role</label><select id="reset-role" class="form-select"><option value="mentor">Mentor</option><option value="mentee">Mentee</option></select></div>
+          <div class="form-group"><label class="form-label">Email</label><input id="reset-email" type="email" class="form-input" required autocomplete="email"></div>
+          <button class="btn btn-primary" type="submit" style="width:100%; justify-content:center;">Send reset code</button>
+        </form>
+        <form id="reset-confirm-form" style="display:none; margin-top:22px; padding-top:20px; border-top:1px solid var(--border-color);" onsubmit="confirmPasswordReset(event)">
+          <div id="reset-local-code" style="display:none; padding:12px; margin-bottom:16px; border-radius:10px; background:rgba(251,191,36,.12); color:#FCD34D; font-size:13px;"></div>
+          <div class="form-group"><label class="form-label">Six-digit code</label><input id="reset-code" inputmode="numeric" maxlength="6" class="form-input" required placeholder="000000"></div>
+          <div class="form-group"><label class="form-label">New password</label><input id="reset-new-password" type="password" minlength="8" class="form-input" required autocomplete="new-password"></div>
+          <button class="btn btn-success" type="submit" style="width:100%; justify-content:center;">Update password</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="incoming-call-alert" style="display:none; position:fixed; right:24px; bottom:24px; z-index:10000; width:min(390px, calc(100vw - 32px)); padding:20px; border-radius:20px; background:linear-gradient(135deg, #312E81, #155E75); border:1px solid rgba(255,255,255,.25); box-shadow:0 20px 55px rgba(0,0,0,.45); color:#fff;">
+      <div style="display:flex; align-items:center; gap:12px;"><div class="calling-pulse"><div class="avatar" style="width:48px; height:48px;">📞</div></div><div><div style="font-size:12px; opacity:.8;">INCOMING VIDEO CALL</div><strong id="incoming-call-name" style="font-size:18px;"></strong><div id="incoming-call-topic" style="font-size:12px; opacity:.8; margin-top:2px;"></div></div></div>
+      <div style="display:flex; gap:10px; margin-top:18px;"><button class="btn btn-danger" style="flex:1; justify-content:center;" onclick="respondToIncomingCall('declined')">Decline</button><button class="btn btn-success" style="flex:1; justify-content:center;" onclick="respondToIncomingCall('accepted')">Accept</button></div>
+    </div>
+
+    <div id="modal-call-member-picker" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-call-member-picker')">✕</button>
+        <h2 id="call-member-picker-title" style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">Select Student</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Choose who should join this video call.</p>
+        <div id="call-member-picker-list" class="options-grid" style="grid-template-columns:1fr;"></div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;" onclick="confirmCallMemberPicker()">Continue</button>
+      </div>
+    </div>
+
+    <div id="modal-book-session" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-book-session')">✕</button>
+        <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">📅 Schedule Session</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Choose one of your available times for this student.</p>
+        <form onsubmit="handleBookSessionSubmit(event)">
+          <div class="form-group"><label class="form-label">Student</label><input id="book-session-mentee-name" class="form-input" readonly></div>
+          <div class="form-group"><label class="form-label">Session topic</label><input id="book-session-topic" class="form-input" required placeholder="Example: React code review"></div>
+          <div class="form-group"><label class="form-label">Choose session times</label><p style="color:var(--text-muted); font-size:13px; margin:-4px 0 12px;">Select as many slots as you want to conduct: 2, 3, 5, 6, or more.</p><div id="book-session-slot-options" class="options-grid" style="grid-template-columns:1fr 1fr; max-height:330px; overflow-y:auto; padding-right:6px;"></div><div id="book-session-slot-count" style="font-size:13px; color:var(--primary-cyan); font-weight:700; margin-top:8px;">0 session times selected</div></div>
+          <div class="form-group"><label class="form-label">Message to student (optional)</label><textarea id="book-session-message" class="form-textarea" rows="3" placeholder="Example: Please bring your latest assignment and questions."></textarea></div>
+          <button class="btn btn-primary" type="submit" style="width:100%; justify-content:center;">Confirm Session</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="modal-reschedule-session" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-reschedule-session')">✕</button>
+        <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">Request a Different Time</h2>
+        <p id="reschedule-session-details" style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"></p>
+        <form onsubmit="submitRescheduleRequest(event)">
+          <div class="form-group"><label class="form-label">Message to your mentor</label><textarea id="reschedule-session-message" class="form-textarea" rows="5" required placeholder="Example: I have a class at this time. Could we please move the session to Wednesday afternoon?"></textarea></div>
+          <button class="btn btn-primary" type="submit" style="width:100%; justify-content:center;">Send Reschedule Request</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: INTERACTIVE QUIZ RESOLVER -->
+    <div id="modal-quiz-resolver" class="modal-overlay">
+      <div class="modal-card" style="max-width:720px;">
+        <button class="modal-close" onclick="closeModal('modal-quiz-resolver')">✕</button>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <h2 id="quiz-resolver-title" style="font-family:var(--font-heading); font-size:24px;">📝 Knowledge Check Quiz</h2>
+          <span id="quiz-resolver-badge" class="badge badge-available">Multiple Choice</span>
+        </div>
+        <p id="quiz-resolver-instructions" style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Answer all questions below to verify your mastery.</p>
+        
+        <form onsubmit="handleQuizResolverSubmit(event)">
+          <input type="hidden" id="quiz-resolver-item-id">
+          <div id="quiz-resolver-questions-container" style="display:flex; flex-direction:column; gap:20px; margin-bottom:24px;"></div>
+          <div id="quiz-resolver-score-banner" style="display:none; padding:16px; border-radius:14px; background:rgba(6,182,212,0.12); border:1px solid var(--border-glow); margin-bottom:20px;"></div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-quiz-resolver')">Close</button>
+            <button id="quiz-resolver-submit-btn" type="submit" class="btn btn-primary">Submit Answers 🚀</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: AI ASSIGNMENT GENERATOR -->
+    <div id="modal-ai-assignment" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-ai-assignment')">✕</button>
+        <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">✨ AI Work Generator</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Specify a topic and target role. AI will generate custom instructions, code snippets, and deadlines.</p>
+        <form onsubmit="handleGenerateAiAssignmentSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Topic / Skill</label>
+            <input id="ai-gen-topic" class="form-input" required placeholder="Example: React Custom Hooks & Async State Management">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Role</label>
+            <select id="ai-gen-role" class="form-select">
+              <option value="Junior Frontend Developer" selected>Junior Frontend Developer</option>
+              <option value="Full Stack Engineer">Full Stack Engineer</option>
+              <option value="Backend Developer">Backend Developer</option>
+              <option value="Mobile Developer">Mobile Developer</option>
+              <option value="DevOps Lead">DevOps Lead</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Work Type</label>
+            <select id="ai-gen-type" class="form-select">
+              <option value="assignment" selected>Assignment / Homework</option>
+              <option value="quiz">Quiz Questions</option>
+              <option value="snippet">Code Snippet Practice</option>
+            </select>
+          </div>
+          <button id="ai-gen-submit-btn" type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">✨ Generate & Populate Form</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: SECURE PORTAL SWITCH AUTHENTICATION -->
+    <div id="modal-switch-portal-auth" class="modal-overlay">
+      <div class="modal-card">
+        <button class="modal-close" onclick="closeModal('modal-switch-portal-auth')">✕</button>
+        <h2 id="portal-auth-title" style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">🔐 Portal Credentials Verification</h2>
+        <p id="portal-auth-subtitle" style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">Enter valid credentials for the target portal to switch access.</p>
+        <form onsubmit="handlePortalAuthSubmit(event)">
+          <input type="hidden" id="portal-auth-target-role">
+          <div class="form-group">
+            <label class="form-label">Account Email</label>
+            <input type="email" id="portal-auth-email" class="form-input" required placeholder="Enter email address">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Account Password</label>
+            <input type="password" id="portal-auth-password" class="form-input" required placeholder="Enter password">
+          </div>
+          <div id="portal-auth-error-msg" style="display:none; font-size:13px; color:#F87171; margin:-4px 0 16px;"></div>
+          <button id="portal-auth-submit-btn" type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">🔐 Verify Credentials & Switch Portal</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- INCOMING CALL FLOATING ALERT OVERLAY MODAL -->
+    <div id="incoming-call-alert" style="display:none; position:fixed; top:24px; right:24px; z-index:99999; width:380px; background:linear-gradient(135deg, #0F172A, #1E293B); border:2px solid var(--primary-cyan); border-radius:20px; padding:20px; box-shadow:0 20px 50px rgba(6,182,212,0.4), 0 0 30px rgba(0,0,0,0.8); backdrop-filter:blur(12px);">
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+        <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, var(--primary-cyan), var(--primary-purple)); display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 4px 15px rgba(6,182,212,0.5);">📞</div>
+        <div>
+          <h3 style="margin:0; font-size:17px; font-weight:800; color:#FFF;" id="incoming-call-name">Incoming Call</h3>
+          <div style="font-size:13px; color:var(--text-muted);" id="incoming-call-topic">Mentor Video Call</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-primary" style="flex:1; background:#10B981; border-color:#10B981; justify-content:center;" onclick="respondToIncomingCall('accepted')">Accept Call 📞</button>
+        <button class="btn btn-danger" style="flex:1; justify-content:center;" onclick="respondToIncomingCall('declined')">Decline 📵</button>
+      </div>
+    </div>
+
+  </main>
+
+
+
+  <script src="/app.js?v=20260822-readable3d"></script>
+</body>
+</html>

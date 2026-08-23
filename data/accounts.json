@@ -1,0 +1,47 @@
+[
+  {
+    "id": "usr_bf74aec1f95d6489",
+    "role": "mentor",
+    "name": "Abdul Moeez",
+    "email": "moiz88053@gmail.com",
+    "passwordHash": "cbb6f225ed0d531899cedd0ed59d53b9:e4cf42a2b0f5d541b42ab590641497a6a56e734d94af05c2471e40016a5736d27df233706914108c7877f214cb20571127ff8f5594550a151b1b93b92218e5ff",
+    "profile": {
+      "name": "Abdul Moeez",
+      "email": "moiz88053@gmail.com",
+      "phone": "03200090843",
+      "title": "Senior Software Engineer",
+      "specializationFields": [
+        "Backend Development",
+        "System Design & Architecture"
+      ],
+      "services": [
+        "1-on-1 Code Review",
+        "Mock Interviews",
+        "System Design"
+      ],
+      "experience": "5-8 years",
+      "languages": [
+        "TypeScript",
+        "Python"
+      ],
+      "skills": [
+        "Backend Development",
+        "System Design & Architecture",
+        "TypeScript",
+        "Python"
+      ],
+      "bio": "Senior engineer mentoring students.",
+      "pricingType": "free",
+      "hourlyRate": 0,
+      "capacity": "3",
+      "sessionDuration": "60 minutes",
+      "timezone": "PKT (UTC+5)",
+      "availableSlots": [
+        "Mon 10:00 AM",
+        "Wed 2:00 PM"
+      ]
+    },
+    "createdAt": "2026-08-23T10:14:12.823Z",
+    "updatedAt": "2026-08-23T10:14:12.823Z"
+  }
+]

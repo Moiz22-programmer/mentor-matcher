@@ -16,7 +16,7 @@ MentorMatcher is a state-of-the-art, AI-powered mentorship studio designed to co
 9. [API Endpoints Reference](#9-api-endpoints-reference)
 10. [Testing Strategy](#10-testing-strategy)
 11. [Deployment Guide](#11-deployment-guide)
-
+ 
 ---
 
 ## 1. Languages & Core Technologies

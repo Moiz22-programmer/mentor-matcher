@@ -48,7 +48,7 @@ export class AccountsService {
   people(role?: 'mentor' | 'mentee') { return this.accounts.filter(account => !role || account.role === role).map(account => this.publicAccount(account)); }
 
   async requestPasswordReset(dto: RequestPasswordResetDto) {
-    const account = this.accounts.find(item => item.email === dto.email.trim().toLowerCase() && (!dto.role || item.role === dto.role));
+    const account = this.findByEmail(dto.email);
     if (!account) return { message: 'If that account exists, a reset code has been sent.' };
     const code = String(Math.floor(100000 + Math.random() * 900000));
     this.passwordResets.set(account.email, { codeHash: this.hash(code), expiresAt: Date.now() + 15 * 60 * 1000 });
@@ -66,7 +66,7 @@ export class AccountsService {
   }
 
   resetPassword(dto: ResetPasswordDto) {
-    const account = this.accounts.find(item => item.email === dto.email.trim().toLowerCase() && (!dto.role || item.role === dto.role));
+    const account = this.findByEmail(dto.email);
     if (!account) throw new UnauthorizedException('No account exists with this email address.');
     account.passwordHash = this.hash(dto.newPassword);
     account.updatedAt = new Date().toISOString();
@@ -81,6 +81,11 @@ export class AccountsService {
     this.accounts.splice(index, 1);
     this.save();
     return { success: true, message: 'Account deleted successfully.' };
+  }
+
+  private findByEmail(email: string) {
+    const normalized = (email || '').trim().toLowerCase();
+    return this.accounts.find(item => item.email === normalized);
   }
 
   private session(account: Account) { return { token: this.tokenFor(account), account: this.publicAccount(account) }; }

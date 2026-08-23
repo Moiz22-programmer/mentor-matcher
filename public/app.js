@@ -302,7 +302,10 @@ async function accountRequest(path, options = {}) {
 
 function accountToUser(account) {
   const profile = account.profile || {};
-  return { id: account.id, name: account.name, email: account.email, accountRole: account.role, ...profile, role: account.role === 'mentor' ? (profile.title || 'Mentor') : (profile.currentRole || 'Mentee') };
+  const displayRole = account.role === 'mentor'
+    ? (profile.title || 'Mentor')
+    : (profile.currentRole || profile.role || 'Mentee');
+  return { id: account.id, name: account.name, email: account.email, accountRole: account.role, ...profile, role: displayRole };
 }
 
 async function loadRegisteredMentors() {
@@ -543,6 +546,7 @@ function renderSettings(role) {
     <div class="form-group"><label class="form-label">Location</label><input id="settings-location" class="form-input" value="${location}"></div>
     <div class="form-group"><label class="form-label">Backend API URL (For Vercel Deploy)</label><input id="settings-backend" class="form-input" placeholder="e.g. https://your-backend.up.railway.app" value="${backendUrl}"></div>
     <div class="form-group"><label class="form-label">About you</label><textarea id="settings-bio" class="form-textarea" rows="4">${user.bio || ''}</textarea></div>
+    <div class="form-group"><label class="form-label">New password (optional)</label><input id="settings-password" type="password" minlength="8" class="form-input" autocomplete="new-password" placeholder="Leave blank to keep your current password"></div>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px; gap:16px; flex-wrap:wrap; width:100%;">
       <button class="btn btn-primary" type="submit">Save Changes</button>
       <div style="display:flex; gap:10px;">
@@ -553,7 +557,7 @@ function renderSettings(role) {
   </form>`;
 }
 
-function saveSettings(event, role) {
+async function saveSettings(event, role) {
   event.preventDefault();
   const user = state.currentUser;
   if (!user) return;
@@ -563,8 +567,12 @@ function saveSettings(event, role) {
   user.location = document.getElementById('settings-location').value.trim();
   user.bio = document.getElementById('settings-bio').value.trim();
   if (role === 'mentor') user.title = document.getElementById('settings-role').value.trim();
-  else user.role = document.getElementById('settings-role').value.trim();
-  
+  else {
+    user.role = document.getElementById('settings-role').value.trim();
+    user.currentRole = user.role;
+  }
+
+  const newPassword = document.getElementById('settings-password')?.value || '';
   const backendVal = document.getElementById('settings-backend').value.trim();
   if (backendVal) {
     localStorage.setItem('mm_backend_url', backendVal);
@@ -576,8 +584,38 @@ function saveSettings(event, role) {
   const index = list.findIndex(item => item.id === user.id);
   if (index >= 0) list[index] = user;
   syncState();
+
+  if (newPassword) {
+    try {
+      await accountRequest('password-reset/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ email: user.email, newPassword })
+      });
+    } catch (error) {
+      if (!/no account exists/i.test(error.message || '')) {
+        showToast(error.message || 'Could not update your password.', 'error');
+        return;
+      }
+      try {
+        await accountRequest('register', {
+          method: 'POST',
+          body: JSON.stringify({
+            role,
+            name: user.name,
+            email: user.email,
+            password: newPassword,
+            profile: { ...user, currentRole: user.currentRole || user.role }
+          })
+        });
+      } catch (registerError) {
+        showToast(registerError.message || 'Could not update your password.', 'error');
+        return;
+      }
+    }
+  }
+
   if (role === 'mentor') renderMentorDashboard(); else renderMenteeDashboard();
-  showToast('Settings saved. Page will reload to apply network routing.', 'success');
+  showToast(newPassword ? 'Password and settings saved. Page will reload to apply network routing.' : 'Settings saved. Page will reload to apply network routing.', 'success');
   setTimeout(() => window.location.reload(), 1500);
 }
 
@@ -1770,11 +1808,28 @@ async function confirmPasswordResetDirect(event) {
     const role = document.getElementById('reset-role').value;
     const newPassword = document.getElementById('reset-new-password').value;
     
-    const result = await accountRequest('password-reset/confirm', {
-      method: 'POST',
-      body: JSON.stringify({ email, role, newPassword })
-    });
-    
+    let result;
+    try {
+      result = await accountRequest('password-reset/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ email, newPassword })
+      });
+    } catch (error) {
+      const localProfile = findLocalProfileForEmail(email, role);
+      if (!/no account exists/i.test(error.message || '') || !localProfile) throw error;
+      await accountRequest('register', {
+        method: 'POST',
+        body: JSON.stringify({
+          role: localProfile.accountRole === 'mentor' ? 'mentor' : 'mentee',
+          name: localProfile.name || email.split('@')[0],
+          email,
+          password: newPassword,
+          profile: { ...localProfile, currentRole: localProfile.currentRole || localProfile.role }
+        })
+      });
+      result = { message: 'Password updated. You can now log in with your new password.' };
+    }
+
     closeModal('modal-password-reset');
     document.getElementById('login-email').value = email;
     const loginRoleRadios = document.getElementsByName('login-role');
@@ -2236,10 +2291,22 @@ function assignNewTask(e) {
 }
 
 // 5-STEP MENTEE ONBOARDING HANDLERS
+function findLocalProfileForEmail(email, preferredRole) {
+  const normalized = (email || '').trim().toLowerCase();
+  const matchesEmail = (user) => (user?.email || '').trim().toLowerCase() === normalized;
+  const current = matchesEmail(state.currentUser) ? state.currentUser : null;
+  const mentee = state.mentees.find(matchesEmail);
+  const mentor = state.mentors.find(matchesEmail);
+  if (preferredRole === 'mentor') return mentor || current || mentee;
+  if (preferredRole === 'mentee') return mentee || current || mentor;
+  return current || mentee || mentor;
+}
+
 function handleMenteeStep1(e) {
   if (e) e.preventDefault();
   state.role = 'mentee';
   if (!state.currentUser || state.currentUser.accountRole === 'mentor') state.currentUser = {};
+  state.registrationPassword = document.getElementById('mentee-password').value;
   state.currentUser.name = document.getElementById('mentee-fullname')?.value || 'Moiz Hussain';
   state.currentUser.email = document.getElementById('mentee-email')?.value || 'moiz@example.com';
   state.currentUser.phone = document.getElementById('mentee-phone')?.value || '+92 300 9876543';
@@ -2308,24 +2375,31 @@ function selectMentorCard(cardEl, mentorId, mentorName) {
   }
 }
 
-function handleMenteeStep5() {
+async function handleMenteeStep5() {
   state.role = 'mentee';
   const chosenMentor = state.mentors.find(m => m.id === state.selectedMentorId) || state.mentors[0];
-  state.currentUser.assignedMentorId = chosenMentor.id;
-  state.currentUser.assignedMentorName = chosenMentor.name;
-
-  const existingIdx = state.mentees.findIndex(c => c.email === state.currentUser.email);
-  if (existingIdx >= 0) state.mentees[existingIdx] = state.currentUser;
-  else {
-    state.currentUser.id = 'c_' + Date.now();
-    state.currentUser.progressPct = 10;
-    state.currentUser.score = '7/10';
-    state.mentees.unshift(state.currentUser);
+  if (chosenMentor) {
+    state.currentUser.assignedMentorId = chosenMentor.id;
+    state.currentUser.assignedMentorName = chosenMentor.name;
   }
-  syncState();
+  state.currentUser.currentRole = state.currentUser.role;
+  state.currentUser.progressPct = state.currentUser.progressPct || 10;
+  state.currentUser.score = state.currentUser.score || '7/10';
 
-  showToast(`🎉 Mentee Profile Created! Welcome ${state.currentUser.name}`, 'success');
-  goToMenteeDashboard();
+  if (!state.registrationPassword || state.registrationPassword.length < 8) {
+    showToast('Please go back to step 1 and set a password of at least 8 characters.', 'error');
+    return;
+  }
+
+  try {
+    await createAccount('mentee', state.currentUser, state.registrationPassword);
+    const existingIdx = state.mentees.findIndex(c => c.email === state.currentUser.email);
+    if (existingIdx >= 0) state.mentees[existingIdx] = state.currentUser;
+    else state.mentees.unshift(state.currentUser);
+    syncState();
+    showToast(`🎉 Mentee Profile Created! Welcome ${state.currentUser.name}`, 'success');
+    goToMenteeDashboard();
+  } catch (error) { showToast(error.message || 'Could not create your account.', 'error'); }
 }
 
 function goToMenteeDashboard() {

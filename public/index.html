@@ -2,12 +2,12 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>MentorMatcher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/atelier.css?v=readable3d">
+  <link rel="stylesheet" href="/atelier.css?v=mobile1">
   <style>/* legacy overrides kept empty so inline theme vars still resolve */</style>
 </head>
 <body>
@@ -348,7 +348,7 @@
     <div id="screen-mentee-5" class="screen">
       <div class="auth-card">
         <h2 style="font-family:var(--font-heading); font-size:24px; font-weight:800; margin-bottom:12px;">Step 5: Match Mentor</h2>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <div class="mentor-search-row">
           <input type="text" id="mentor-search-input" class="form-input" placeholder="Search..." oninput="renderMentorSelectionList()">
           <select id="mentor-skill-filter" class="form-select" onchange="renderMentorSelectionList()"><option value="ALL">All Skills</option></select>
         </div>
@@ -402,7 +402,7 @@
             <div class="dash-card-title">Chat with mentees</div>
             <div class="form-group"><label class="form-label">Chat with</label><select id="mentor-chat-recipient" class="form-select" onchange="selectMentorChatRecipient(this.value)"></select></div>
             <div id="chat-messages-mentor"></div>
-            <div style="display:flex; gap:10px;">
+            <div class="chat-composer">
               <input type="text" id="chat-input-mentor" class="form-input" placeholder="Write a message" onkeydown="if(event.key==='Enter') handleSendMessage('mentor')">
               <button class="btn btn-primary" onclick="handleSendMessage('mentor')">Send</button>
             </div>
@@ -558,7 +558,7 @@
           <div class="dash-card">
             <div class="dash-card-title">Chat with your mentor</div>
             <div id="chat-messages-mentee"></div>
-            <div style="display:flex; gap:10px;">
+            <div class="chat-composer">
               <input type="text" id="chat-input-mentee" class="form-input" placeholder="Write a message" onkeydown="if(event.key==='Enter') handleSendMessage('mentee')">
               <button class="btn btn-primary" onclick="handleSendMessage('mentee')">Send</button>
             </div>
@@ -734,7 +734,7 @@
       </div>
     </div>
 
-    <div id="incoming-call-alert" style="display:none; position:fixed; right:24px; bottom:24px; z-index:10000; width:min(390px, calc(100vw - 32px)); padding:20px; border-radius:20px; background:linear-gradient(135deg, #312E81, #155E75); border:1px solid rgba(255,255,255,.25); box-shadow:0 20px 55px rgba(0,0,0,.45); color:#fff;">
+    <div id="incoming-call-alert" class="incoming-call-alert" style="display:none;">
       <div style="display:flex; align-items:center; gap:12px;"><div class="calling-pulse"><div class="avatar" style="width:48px; height:48px;">📞</div></div><div><div style="font-size:12px; opacity:.8;">INCOMING VIDEO CALL</div><strong id="incoming-call-name" style="font-size:18px;"></strong><div id="incoming-call-topic" style="font-size:12px; opacity:.8; margin-top:2px;"></div></div></div>
       <div style="display:flex; gap:10px; margin-top:18px;"><button class="btn btn-danger" style="flex:1; justify-content:center;" onclick="respondToIncomingCall('declined')">Decline</button><button class="btn btn-success" style="flex:1; justify-content:center;" onclick="respondToIncomingCall('accepted')">Accept</button></div>
     </div>

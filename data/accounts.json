@@ -1,5 +1,17 @@
 [
   {
+    "id": "usr_91345f3250272468",
+    "role": "mentee",
+    "name": "Test Mentee",
+    "email": "mentee-fix-190339519@example.com",
+    "passwordHash": "9bf2092d885c315cbbd3289bfecfdcf2:3c45ca84eeaaf3c9b0e311790879b52784872bbc6912cfe70b8d2dc22c9d21a88d29497ca77dd5472d0dd3ac72d515acdb61a4af13d3bea468f825a7d509b9fa",
+    "profile": {
+      "currentRole": "CS student"
+    },
+    "createdAt": "2026-08-23T14:54:34.383Z",
+    "updatedAt": "2026-08-23T14:55:22.688Z"
+  },
+  {
     "id": "usr_bf74aec1f95d6489",
     "role": "mentor",
     "name": "Abdul Moeez",

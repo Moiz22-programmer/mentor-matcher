@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { LoginDto, RegisterAccountDto, UpdateProfileDto } from './dto/account.dto';
 import { RequestPasswordResetDto, ResetPasswordDto } from './dto/account.dto';
 import { EmailService } from '../email/email.service';
@@ -10,7 +10,7 @@ type Account = { id: string; role: 'mentor' | 'mentee'; name: string; email: str
 
 @Injectable()
 export class AccountsService {
-  private readonly dataPath = join(process.cwd(), 'data', 'accounts.json');
+  private readonly dataPath = process.env.ACCOUNTS_JSON_PATH || join(process.cwd(), 'data', 'accounts.json');
   private accounts: Account[];
   private readonly passwordResets = new Map<string, { codeHash: string; expiresAt: number }>();
   private readonly tokenSecret = process.env.AUTH_SECRET || randomBytes(32).toString('hex');
@@ -94,5 +94,17 @@ export class AccountsService {
   private hash(password: string) { const salt = randomBytes(16).toString('hex'); return `${salt}:${scryptSync(password, salt, 64).toString('hex')}`; }
   private verify(password: string, stored: string) { const [salt, digest] = stored.split(':'); const candidate = scryptSync(password, salt, 64).toString('hex'); return timingSafeEqual(Buffer.from(digest), Buffer.from(candidate)); }
   private load(): Account[] { try { if (!existsSync(this.dataPath)) return []; return JSON.parse(readFileSync(this.dataPath, 'utf8')); } catch { return []; } }
-  private save() { const directory = join(process.cwd(), 'data'); if (!existsSync(directory)) mkdirSync(directory, { recursive: true }); writeFileSync(this.dataPath, JSON.stringify(this.accounts, null, 2), 'utf8'); }
+  private save() {
+    try {
+      const directory = dirname(this.dataPath);
+      if (!existsSync(directory)) mkdirSync(directory, { recursive: true });
+      writeFileSync(this.dataPath, JSON.stringify(this.accounts, null, 2), 'utf8');
+    } catch (error) {
+      console.warn(
+        `[AccountsService] Warning: Could not write accounts to ${this.dataPath}. ` +
+        `This is expected in read-only environments (e.g. Vercel). ` +
+        `Data will remain in-memory for this instance. Error: ${error.message}`
+      );
+    }
+  }
 }

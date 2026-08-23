@@ -834,10 +834,319 @@ body.is-app #screen-dashboard-mentee.screen.active {
   .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .container { padding: 0 16px; }
-  main { padding: 18px 0 40px; }
-  .nav-wrapper { height: 58px; }
-  .brand-title { font-size: 17px; }
+  main { padding: 18px 0 32px; }
+
+  .nav-wrapper {
+    height: auto;
+    padding: 12px 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .brand {
+    width: 100%;
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .brand-title {
+    font-size: 19px;
+    line-height: 1.1;
+  }
+
   .brand-sub { display: none; }
+
+  .nav-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav-buttons .btn {
+    flex: 1 1 calc(50% - 10px);
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .screen.active:has(> .auth-card) {
+    align-items: stretch;
+    min-height: auto;
+    padding: 0;
+  }
+
+  .hero-atelier {
+    gap: 20px;
+    padding: 4px 0 10px;
+  }
+
+  .display {
+    font-size: clamp(34px, 10vw, 48px);
+    margin-bottom: 14px;
+  }
+
+  .lede {
+    font-size: 17px;
+    margin-bottom: 18px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions .btn,
+  .btn-lg {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-stage {
+    min-height: 260px;
+  }
+
+  #hero-tilt {
+    margin: 0;
+    max-width: 100%;
+    padding: 20px 18px;
+    transform: none;
+    animation: none;
+  }
+
+  .session-preview h3 {
+    font-size: 26px;
+  }
+
+  .hero-points,
+  .role-grid,
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card,
+  .auth-card:has(.options-grid) {
+    max-width: none;
+    width: 100%;
+    padding: 22px 18px;
+  }
+
+  .auth-card h2,
+  .auth-card .auth-title {
+    font-size: 28px;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-shell {
+    border-radius: 14px;
+  }
+
+  .app-sidebar {
+    padding: 10px 8px 6px;
+  }
+
+  .dashboard-nav-tabs {
+    gap: 8px;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  .tab-btn {
+    flex: 0 0 auto;
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 8px;
+  }
+
+  .tab-btn.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--accent);
+  }
+
+  .dashboard-layout {
+    padding: 12px;
+  }
+
+  .dashboard-header,
+  .dash-card-title {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .dashboard-header {
+    gap: 8px;
+  }
+
+  .page-heading h2,
+  .dashboard-header h2 {
+    font-size: 24px;
+  }
+
+  .overview-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-select-card,
+  .action-button-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-button-card > div:last-child {
+    justify-content: stretch !important;
+  }
+
+  .action-button-card > div:last-child .btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .modal-card {
+    max-height: min(86vh, 760px);
+    padding: 22px 18px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+  }
+
+  #chat-messages-mentor,
+  #chat-messages-mentee {
+    min-height: 240px;
+  }
+
+  #native-video-box-mentor,
+  #native-video-box-mentee {
+    min-height: 320px !important;
+    border-radius: 18px !important;
+  }
+
+  #local-video-mentor,
+  #local-video-mentee {
+    width: 108px !important;
+    height: 80px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+  }
+
+  #toast-container {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    max-width: none !important;
+  }
+
+  #toast-container > .toast-item {
+    width: 100%;
+    padding: 12px 14px !important;
+  }
+
+  .settings-actions,
+  .settings-secondary-actions,
+  .mail-card-header,
+  .task-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .settings-actions .btn,
+  .settings-secondary-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mail-card {
+    padding: 16px !important;
+  }
+
+  .mail-card-date {
+    align-self: flex-start;
+  }
+
+  .mail-card-preview {
+    white-space: normal !important;
+    word-break: break-word;
+  }
+
+  .dash-card [style*="display:flex"][style*="justify-content:space-between"] {
+    flex-wrap: wrap;
+  }
+
+  .dash-card [style*="text-align:right"] {
+    text-align: left !important;
+    width: 100%;
+  }
+
+  .dash-card [style*="justify-content:flex-end"],
+  .dash-card [style*="justify-content:center"] {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 520px) {
+  .container { padding: 0 12px; }
+  .brand-title { font-size: 17px; }
+
+  .nav-buttons .btn {
+    flex-basis: 100%;
+  }
+
+  .display {
+    font-size: clamp(30px, 11vw, 40px);
+  }
+
+  .lede,
+  .session-meta,
+  .session-note {
+    font-size: 15px;
+  }
+
+  .auth-card {
+    padding: 18px 14px;
+  }
+
+  .auth-card h2,
+  .auth-card .auth-title {
+    font-size: 24px;
+  }
+
+  .dashboard-layout {
+    padding: 10px;
+  }
+
+  .page-heading h2,
+  .dashboard-header h2 {
+    font-size: 22px;
+  }
+
+  .btn,
+  .tab-btn {
+    font-size: 14px;
+  }
+
+  #native-video-box-mentor,
+  #native-video-box-mentee {
+    min-height: 260px !important;
+  }
+
+  #local-video-mentor,
+  #local-video-mentee {
+    width: 92px !important;
+    height: 68px !important;
+  }
 }

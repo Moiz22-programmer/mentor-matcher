@@ -329,11 +329,13 @@ function showToast(message, type = 'success') {
   if (!container) {
     container = document.createElement('div');
     container.id = 'toast-container';
+    container.className = 'toast-container';
     container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
     document.body.appendChild(container);
   }
 
   const toast = document.createElement('div');
+  toast.className = 'toast-item';
   const bg = type === 'success' ? 'linear-gradient(135deg, #10B981, #059669)' :
              type === 'info' ? 'linear-gradient(135deg, #6366F1, #8B5CF6)' :
              'linear-gradient(135deg, #EF4444, #DC2626)';
@@ -547,9 +549,9 @@ function renderSettings(role) {
     <div class="form-group"><label class="form-label">Backend API URL (For Vercel Deploy)</label><input id="settings-backend" class="form-input" placeholder="e.g. https://your-backend.up.railway.app" value="${backendUrl}"></div>
     <div class="form-group"><label class="form-label">About you</label><textarea id="settings-bio" class="form-textarea" rows="4">${user.bio || ''}</textarea></div>
     <div class="form-group"><label class="form-label">New password (optional)</label><input id="settings-password" type="password" minlength="8" class="form-input" autocomplete="new-password" placeholder="Leave blank to keep your current password"></div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px; gap:16px; flex-wrap:wrap; width:100%;">
+    <div class="settings-actions" style="display:flex; justify-content:space-between; align-items:center; margin-top:28px; gap:16px; flex-wrap:wrap; width:100%;">
       <button class="btn btn-primary" type="submit">Save Changes</button>
-      <div style="display:flex; gap:10px;">
+      <div class="settings-secondary-actions" style="display:flex; gap:10px;">
         <button type="button" class="btn btn-secondary" onclick="logout()" style="border-color:var(--line);">Log Out</button>
         <button type="button" class="btn btn-danger" onclick="deleteUserAccount('${role}')">Delete Account</button>
       </div>
@@ -2212,13 +2214,13 @@ function renderInboxList(role, containerId) {
   const mails = inboxMailsFor(role);
 
   container.innerHTML = mails.map(mail => `
-    <button type="button" onclick="openReceivedEmail('${mail.id}', '${role}')" style="display:block; width:100%; text-align:left; color:inherit; font:inherit; cursor:pointer; margin-bottom:12px; background:var(--bg-card); border:1px solid var(--border-color); border-left:4px solid ${isMailReadForUser(mail, viewer.email) ? 'var(--border-color)' : 'var(--primary-cyan)'}; border-radius:16px; padding:18px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:12px;">
+    <button type="button" class="mail-card" onclick="openReceivedEmail('${mail.id}', '${role}')" style="display:block; width:100%; text-align:left; color:inherit; font:inherit; cursor:pointer; margin-bottom:12px; background:var(--bg-card); border:1px solid var(--border-color); border-left:4px solid ${isMailReadForUser(mail, viewer.email) ? 'var(--border-color)' : 'var(--primary-cyan)'}; border-radius:16px; padding:18px;">
+      <div class="mail-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:12px;">
         <div style="font-weight:${isMailReadForUser(mail, viewer.email) ? '600' : '800'}; font-size:15px;">📧 ${mail.subject}</div>
-        <div style="font-size:12px; color:var(--text-muted); flex-shrink:0;">${mail.date}</div>
+        <div class="mail-card-date" style="font-size:12px; color:var(--text-muted); flex-shrink:0;">${mail.date}</div>
       </div>
       <div style="font-size:13px; color:var(--primary-cyan); font-weight:600; margin-bottom:8px;">From: ${mail.senderName} (${mail.senderEmail || 'No email'})</div>
-      <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${mail.body}</div>
+      <div class="mail-card-preview" style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${mail.body}</div>
       <div style="font-size:12px; color:var(--primary-purple); margin-top:10px; font-weight:700;">Open and reply →</div>
     </button>
   `).join('') || '<p style="color:var(--text-muted);">No emails in your inbox yet.</p>';
@@ -2265,7 +2267,7 @@ function renderHomeworkTasks() {
   if (!container) return;
 
   container.innerHTML = state.tasks.map(t => `
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; margin-bottom:8px;">
+    <div class="task-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; margin-bottom:8px;">
       <div>
         <div style="font-weight:700; font-size:14px;">📝 ${t.title}</div>
         <div style="font-size:12px; color:var(--text-muted);">Assigned to: ${t.menteeName} • Due: ${t.dueDate}</div>

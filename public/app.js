@@ -4,26 +4,50 @@
  * Complete Mentee Onboarding & Dashboard Tabs
  */
 
-// Override fetch and EventSource to support external backend URL configuration when deployed on Vercel
+// Dynamic backend configuration and fetch override
 (function() {
-  const customBackend = localStorage.getItem('mm_backend_url') || '';
-  if (customBackend) {
+  let backendUrl = localStorage.getItem('mm_backend_url') || sessionStorage.getItem('mm_fetched_backend_url') || '';
+
+  function applyOverride(url) {
+    if (!url) return;
+    const targetUrl = url.replace(/\/$/, '');
+    
     const originalFetch = window.fetch;
     window.fetch = function(input, init) {
-      if (typeof input === 'string' && input.startsWith('/api/v1')) {
-        input = customBackend.replace(/\/$/, '') + input;
+      if (typeof input === 'string' && input.startsWith('/api/v1') && !input.includes('/api/v1/config')) {
+        input = targetUrl + input;
       }
       return originalFetch(input, init);
     };
 
     const OriginalEventSource = window.EventSource;
-    window.EventSource = function(url, configuration) {
-      if (typeof url === 'string' && url.startsWith('/api/v1')) {
-        url = customBackend.replace(/\/$/, '') + url;
+    window.EventSource = function(urlStr, configuration) {
+      if (typeof urlStr === 'string' && urlStr.startsWith('/api/v1')) {
+        urlStr = targetUrl + urlStr;
       }
-      return new OriginalEventSource(url, configuration);
+      return new OriginalEventSource(urlStr, configuration);
     };
   }
+
+  if (backendUrl) {
+    applyOverride(backendUrl);
+  }
+
+  // Fetch target backend URL from serverless endpoint on startup
+  window.fetch('/api/v1/config')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.backendUrl) {
+        const fetchedUrl = data.backendUrl.trim();
+        if (fetchedUrl && fetchedUrl !== sessionStorage.getItem('mm_fetched_backend_url')) {
+          sessionStorage.setItem('mm_fetched_backend_url', fetchedUrl);
+          if (!localStorage.getItem('mm_backend_url')) {
+            applyOverride(fetchedUrl);
+          }
+        }
+      }
+    })
+    .catch(err => console.log('Backend config fetch skipped/failed:', err));
 })();
 
 const INITIAL_MENTORS = [

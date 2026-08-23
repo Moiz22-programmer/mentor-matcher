@@ -22,4 +22,12 @@ export class AppController {
       service: 'MentorMatcher API',
     };
   }
+
+  @Get('/config')
+  @ApiOperation({ summary: 'Get backend configuration' })
+  getConfig() {
+    return {
+      backendUrl: process.env.BACKEND_URL || '',
+    };
+  }
 }

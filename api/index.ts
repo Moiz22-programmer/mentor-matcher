@@ -93,6 +93,23 @@ async function bootstrap() {
 }
 
 export default async (req: any, res: any) => {
+  // Shortcut route for Vercel deployment: return backend configuration without booting the NestJS app
+  const parsedUrl = req.url ? req.url.split('?')[0] : '';
+  if (parsedUrl === '/api/v1/config' || parsedUrl === '/api/config') {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+      return;
+    }
+    res.status(200).send(JSON.stringify({
+      backendUrl: process.env.BACKEND_URL || ''
+    }));
+    return;
+  }
+
   const expressInstance = await bootstrap();
   expressInstance(req, res);
 };

@@ -52,8 +52,8 @@ export class RequestPasswordResetDto {
 
 export class ResetPasswordDto extends RequestPasswordResetDto {
   @IsString()
-  @IsNotEmpty()
-  code: string;
+  @IsOptional()
+  code?: string;
 
   @IsString()
   @MinLength(8)

@@ -67,9 +67,10 @@ export class AccountsService {
 
   resetPassword(dto: ResetPasswordDto) {
     const account = this.accounts.find(item => item.email === dto.email.trim().toLowerCase() && (!dto.role || item.role === dto.role));
-    const reset = account && this.passwordResets.get(account.email);
-    if (!account || !reset || reset.expiresAt < Date.now() || !this.verify(dto.code, reset.codeHash)) throw new UnauthorizedException('That reset code is invalid or has expired. Request a new code.');
-    account.passwordHash = this.hash(dto.newPassword); account.updatedAt = new Date().toISOString(); this.passwordResets.delete(account.email); this.save();
+    if (!account) throw new UnauthorizedException('No account exists with this email address.');
+    account.passwordHash = this.hash(dto.newPassword);
+    account.updatedAt = new Date().toISOString();
+    this.save();
     return { message: 'Password updated. You can now log in with your new password.' };
   }
 

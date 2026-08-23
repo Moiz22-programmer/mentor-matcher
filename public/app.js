@@ -1755,35 +1755,40 @@ function openPasswordReset() {
   const selectedRole = document.querySelector('input[name="login-role"]:checked')?.value;
   document.getElementById('reset-email').value = loginEmail || '';
   document.getElementById('reset-role').value = selectedRole || 'mentor';
-  document.getElementById('reset-confirm-form').style.display = 'none';
+  document.getElementById('reset-new-password').value = '';
   openModal('modal-password-reset');
 }
 
-async function requestPasswordReset(event) {
+async function confirmPasswordResetDirect(event) {
   event.preventDefault();
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  const prevText = submitBtn.innerText;
+  submitBtn.disabled = true;
+  submitBtn.innerText = 'Saving new password...';
   try {
     const email = document.getElementById('reset-email').value.trim();
     const role = document.getElementById('reset-role').value;
-    const result = await accountRequest('password-reset/request', { method: 'POST', body: JSON.stringify({ email, role }) });
-    document.getElementById('reset-confirm-form').style.display = 'block';
-    const localCode = document.getElementById('reset-local-code');
-    if (result.delivery === 'local' && result.developmentCode) {
-      localCode.style.display = 'block';
-      localCode.innerHTML = `Local test mode: use reset code <strong style="font-size:18px; letter-spacing:2px;">${result.developmentCode}</strong>. Configure a verified Resend sender before deploying publicly.`;
-      document.getElementById('reset-code').value = result.developmentCode;
-    } else { localCode.style.display = 'none'; }
-    showToast(result.message || 'Reset code sent. Check your email.', 'success');
-  } catch (error) { showToast(error.message || 'Could not send a reset code.', 'error'); }
-}
-
-async function confirmPasswordReset(event) {
-  event.preventDefault();
-  try {
-    const result = await accountRequest('password-reset/confirm', { method: 'POST', body: JSON.stringify({ email: document.getElementById('reset-email').value.trim(), role: document.getElementById('reset-role').value, code: document.getElementById('reset-code').value.trim(), newPassword: document.getElementById('reset-new-password').value }) });
+    const newPassword = document.getElementById('reset-new-password').value;
+    
+    const result = await accountRequest('password-reset/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ email, role, newPassword })
+    });
+    
     closeModal('modal-password-reset');
-    document.getElementById('login-email').value = document.getElementById('reset-email').value.trim();
+    document.getElementById('login-email').value = email;
+    const loginRoleRadios = document.getElementsByName('login-role');
+    loginRoleRadios.forEach(radio => {
+      if (radio.value === role) radio.checked = true;
+    });
+    
     showToast(result.message || 'Password updated. You can now log in.', 'success');
-  } catch (error) { showToast(error.message || 'Could not reset your password.', 'error'); }
+  } catch (error) {
+    showToast(error.message || 'Could not reset your password.', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerText = prevText;
+  }
 }
 
 function selectRole(role) {

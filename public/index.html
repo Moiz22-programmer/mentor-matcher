@@ -712,17 +712,24 @@
       <div class="modal-card" style="max-width:560px;">
         <button class="modal-close" onclick="closeModal('modal-password-reset')">✕</button>
         <h2 style="font-family:var(--font-heading); font-size:24px; margin-bottom:8px;">Reset your password</h2>
-        <p style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">Works for both mentors and mentees. We will email a six-digit verification code.</p>
-        <form onsubmit="requestPasswordReset(event)">
-          <div class="form-group"><label class="form-label">Account role</label><select id="reset-role" class="form-select"><option value="mentor">Mentor</option><option value="mentee">Mentee</option></select></div>
-          <div class="form-group"><label class="form-label">Email</label><input id="reset-email" type="email" class="form-input" required autocomplete="email"></div>
-          <button class="btn btn-primary" type="submit" style="width:100%; justify-content:center;">Send reset code</button>
-        </form>
-        <form id="reset-confirm-form" style="display:none; margin-top:22px; padding-top:20px; border-top:1px solid var(--border-color);" onsubmit="confirmPasswordReset(event)">
-          <div id="reset-local-code" style="display:none; padding:12px; margin-bottom:16px; border-radius:10px; background:rgba(251,191,36,.12); color:#FCD34D; font-size:13px;"></div>
-          <div class="form-group"><label class="form-label">Six-digit code</label><input id="reset-code" inputmode="numeric" maxlength="6" class="form-input" required placeholder="000000"></div>
-          <div class="form-group"><label class="form-label">New password</label><input id="reset-new-password" type="password" minlength="8" class="form-input" required autocomplete="new-password"></div>
-          <button class="btn btn-success" type="submit" style="width:100%; justify-content:center;">Update password</button>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:18px;">Works for both mentors and mentees. Choose your role, enter your email, and define a new password.</p>
+        <form onsubmit="confirmPasswordResetDirect(event)">
+          <div class="form-group">
+            <label class="form-label">Account role</label>
+            <select id="reset-role" class="form-select">
+              <option value="mentor">Mentor</option>
+              <option value="mentee">Mentee</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input id="reset-email" type="email" class="form-input" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label">New password</label>
+            <input id="reset-new-password" type="password" minlength="8" class="form-input" required autocomplete="new-password">
+          </div>
+          <button class="btn btn-success" type="submit" style="width:100%; justify-content:center; margin-top:8px;">Update password & Save</button>
         </form>
       </div>
     </div>

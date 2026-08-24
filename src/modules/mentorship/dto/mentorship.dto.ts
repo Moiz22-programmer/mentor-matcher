@@ -99,6 +99,7 @@ export class AiVideoReviewDto {
 export class ComposeAndSendEmailDto {
   @ApiProperty({ enum: ['mentor', 'student'] }) @IsIn(['mentor', 'student']) senderRole: string;
   @ApiProperty({ example: 'Amina Khan' }) @IsString() @IsNotEmpty() senderName: string;
+  @ApiPropertyOptional({ example: 'student@example.com' }) @IsOptional() @IsEmail() senderEmail?: string;
   @ApiProperty({ example: 'mentor@example.com' }) @IsEmail() recipientEmail: string;
   @ApiProperty({ example: 'Ali Ahmed' }) @IsString() @IsNotEmpty() recipientName: string;
   @ApiProperty({ example: 'I finished the REST API assignment and added tests for validation errors.' }) @IsString() @IsNotEmpty() summary: string;
@@ -110,4 +111,3 @@ export class GenerateAiAssignmentDto {
   @ApiPropertyOptional({ example: 'Junior Frontend Developer' }) @IsOptional() @IsString() targetRole?: string;
   @ApiPropertyOptional({ enum: ['assignment', 'quiz', 'snippet', 'material'], default: 'assignment' }) @IsOptional() @IsString() type?: string;
 }
-

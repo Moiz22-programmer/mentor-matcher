@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AiCodeReviewDto, AiVideoReviewDto, ComposeAndSendEmailDto, CreateAssignmentDto, CreateQuizDto, GenerateAiAssignmentDto, MentorFeedbackDto, MentorRequestDto, RegisterStudentDto, ReviewMentorRequestDto, SubmitCodeDto, SubmitQuizDto, SubmitVideoDto } from './dto/mentorship.dto';
 import { OpenaiService } from '../openai/openai.service';
@@ -13,6 +13,7 @@ export class MentorshipController {
   @Post('ai/review-video') @ApiOperation({ summary: 'Analyze a supplied video transcript with AI' }) reviewVideo(@Body() dto: AiVideoReviewDto) { return this.openai.reviewVideo(dto.transcript, dto.context); }
   @Post('ai/generate-assignment') @ApiOperation({ summary: 'Auto-generate learning work with AI for mentors' }) generateAssignment(@Body() dto: GenerateAiAssignmentDto) { return this.openai.generateAssignment(dto.topic, dto.targetRole, dto.type); }
   @Post('communications/compose-and-send') @ApiOperation({ summary: 'Use AI to compose and send a mentorship email' }) composeAndSendEmail(@Body() dto: ComposeAndSendEmailDto) { return this.service.composeAndSendEmail(dto); }
+  @Get('communications/inbox') @ApiOperation({ summary: 'Get messages delivered to a mailbox' }) inbox(@Query('email') email: string) { return this.service.inbox(email); }
 
 
   @Post('students/register') @ApiOperation({ summary: 'Register a student and start their learning profile' }) @ApiResponse({ status: 201, description: 'Student created.' })

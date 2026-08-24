@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import { EmailService } from '../email/email.service';
 import { OpenaiService } from '../openai/openai.service';
 import { MentorsService } from '../mentors/mentors.service';
@@ -11,6 +13,7 @@ type Assignment = CreateAssignmentDto & { id: string; mentorId: string; status: 
 type Submission = { id: string; assignmentId: string; studentId: string; type: 'code' | 'video'; content: string; language?: string; transcript?: string; aiScore: number; aiFeedback: string; mentorScore?: number; mentorFeedback?: string; status: 'submitted' | 'reviewed'; submittedAt: string };
 type Quiz = Omit<CreateQuizDto, 'questions'> & { id: string; mentorId: string; questions: CreateQuizDto['questions']; createdAt: string };
 type QuizAttempt = { id: string; quizId: string; studentId: string; answers: Record<string, string>; autoScore: number; pendingReview: boolean; submittedAt: string };
+type MailboxItem = { id: string; senderRole: string; senderName: string; senderEmail: string; recipientRole: string; recipientName: string; recipientEmail: string; subject: string; body: string; type: string; createdAt: string; delivery: string; readBy: string[] };
 
 @Injectable()
 export class MentorshipService {
@@ -21,6 +24,8 @@ export class MentorshipService {
   private submissions: Submission[] = [];
   private quizzes: Quiz[] = [];
   private quizAttempts: QuizAttempt[] = [];
+  private readonly mailboxPath = process.env.MAILBOX_JSON_PATH || join(process.cwd(), 'data', 'mailbox.json');
+  private mailbox: MailboxItem[] = this.loadMailbox();
 
   constructor(private readonly openai: OpenaiService, private readonly email: EmailService, private readonly mentors: MentorsService) {}
 
@@ -143,11 +148,55 @@ export class MentorshipService {
     }
     try {
       const sent = await this.email.sendAutomatedMessage(dto.recipientEmail, draft.subject, draft.body);
-      return { ...draft, recipientEmail: dto.recipientEmail, delivery: sent ? 'sent' : 'drafted—configure RESEND_API_KEY to deliver email' };
+      const delivery = sent ? 'sent' : 'drafted—configure RESEND_API_KEY to deliver email';
+      const mail = this.saveMailboxMessage(dto, draft, delivery);
+      return { ...draft, recipientEmail: dto.recipientEmail, delivery, mail };
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Email delivery failed.';
-      return { ...draft, recipientEmail: dto.recipientEmail, delivery: `drafted—delivery failed (${detail})` };
+      const delivery = `drafted—delivery failed (${detail})`;
+      const mail = this.saveMailboxMessage(dto, draft, delivery);
+      return { ...draft, recipientEmail: dto.recipientEmail, delivery, mail };
     }
+  }
+
+  inbox(email: string) {
+    const normalized = (email || '').trim().toLowerCase();
+    return this.mailbox.filter(mail => mail.recipientEmail.toLowerCase() === normalized);
+  }
+
+  private saveMailboxMessage(dto: ComposeAndSendEmailDto, draft: { subject: string; body: string }, delivery: string) {
+    const mail: MailboxItem = {
+      id: `mail_${uuid()}`,
+      senderRole: dto.senderRole === 'student' ? 'mentee' : 'mentor',
+      senderName: dto.senderName,
+      senderEmail: dto.senderEmail || '',
+      recipientRole: dto.senderRole === 'student' ? 'mentor' : 'mentee',
+      recipientName: dto.recipientName,
+      recipientEmail: dto.recipientEmail.trim().toLowerCase(),
+      subject: draft.subject,
+      body: draft.body,
+      type: dto.type || 'general',
+      createdAt: new Date().toISOString(),
+      delivery,
+      readBy: [],
+    };
+    this.mailbox.unshift(mail);
+    this.mailbox = this.mailbox.slice(0, 500);
+    this.persistMailbox();
+    return mail;
+  }
+
+  private loadMailbox(): MailboxItem[] {
+    try { return existsSync(this.mailboxPath) ? JSON.parse(readFileSync(this.mailboxPath, 'utf8')) : []; } catch { return []; }
+  }
+
+  private persistMailbox() {
+    try {
+      const directory = dirname(this.mailboxPath); if (!existsSync(directory)) mkdirSync(directory, { recursive: true });
+      const temporary = `${this.mailboxPath}.tmp`;
+      writeFileSync(temporary, JSON.stringify(this.mailbox, null, 2), 'utf8');
+      renameSync(temporary, this.mailboxPath);
+    } catch (error) { this.logger.error(`Could not save mailbox: ${error instanceof Error ? error.message : 'unknown error'}`); }
   }
 
   private composeFallbackEmail(dto: ComposeAndSendEmailDto) {

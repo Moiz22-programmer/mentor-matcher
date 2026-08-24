@@ -210,7 +210,7 @@ class Store {
   }
 }
 
-const STORE_VERSION = 3;
+const STORE_VERSION = 4;
 if (Store.get('store_version', 0) < STORE_VERSION) {
   Store.set('mentees', []);
   Store.set('messages', []);
@@ -219,13 +219,8 @@ if (Store.get('store_version', 0) < STORE_VERSION) {
   Store.set('tasks', []);
   Store.set('reports', []);
   Store.set('daily_activity', []);
-  const savedRole = Store.get('user_role', null);
-  const savedUser = Store.get('current_user', null);
-  if (savedRole === 'mentee' || savedUser?.accountRole === 'mentee') {
-    Store.remove('current_user');
-    Store.remove('user_role');
-    Store.remove('auth_token');
-  }
+  // Never clear a registered person's local profile during a UI migration.
+  // It is used to recover the account if a previous local server lost its data.
   Store.set('store_version', STORE_VERSION);
 }
 
@@ -288,6 +283,33 @@ function syncState() {
   if (state.role) Store.set('user_role', state.role);
 }
 
+function rememberedProfiles() {
+  const saved = Store.get('registered_profiles', []);
+  return Array.isArray(saved) ? saved : [];
+}
+
+function rememberRegisteredProfile(role, profile) {
+  if (!profile?.email) return;
+  const email = profile.email.trim().toLowerCase();
+  const profiles = rememberedProfiles().filter(item => item.email?.toLowerCase() !== email);
+  profiles.unshift({ ...profile, email, accountRole: role, savedRole: role });
+  Store.set('registered_profiles', profiles.slice(0, 30));
+}
+
+function findRecoverableProfile(email, role) {
+  const normalized = (email || '').trim().toLowerCase();
+  const candidates = [
+    ...rememberedProfiles(),
+    state.currentUser,
+    ...(state.mentors || []),
+    ...(state.mentees || []),
+  ].filter(Boolean);
+  return candidates.find(profile => {
+    const profileRole = profile.savedRole || profile.accountRole || (profile.title ? 'mentor' : 'mentee');
+    return profile.email?.trim().toLowerCase() === normalized && profileRole === role;
+  }) || null;
+}
+
 async function accountRequest(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (state.authToken) headers.Authorization = `Bearer ${state.authToken}`;
@@ -316,6 +338,7 @@ async function createAccount(role, profile, password) {
   state.authToken = result.token;
   state.role = role;
   state.currentUser = accountToUser(result.account);
+  rememberRegisteredProfile(role, state.currentUser);
   syncState();
   return state.currentUser;
 }
@@ -1775,8 +1798,10 @@ async function handleLogin(e) {
   if (e) e.preventDefault();
   const role = document.querySelector('input[name="login-role"]:checked')?.value;
   if (!role) return showToast('Choose whether you are logging in as a mentor or mentee.', 'error');
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
   try {
-    const result = await accountRequest('login', { method: 'POST', body: JSON.stringify({ email: document.getElementById('login-email').value.trim(), password: document.getElementById('login-password').value, role }) });
+    const result = await accountRequest('login', { method: 'POST', body: JSON.stringify({ email, password, role }) });
     state.authToken = result.token;
     state.role = result.account.role;
     state.currentUser = accountToUser(result.account);
@@ -1784,7 +1809,22 @@ async function handleLogin(e) {
     syncState();
     showToast(`Welcome back, ${state.currentUser.name}!`, 'success');
     state.role === 'mentor' ? goToMentorDashboard() : goToMenteeDashboard();
-  } catch (error) { showToast(error.message || 'Login failed. Check your email and password.', 'error'); }
+  } catch (error) {
+    const missingAccount = /no account exists/i.test(error.message || '');
+    const savedProfile = missingAccount ? findRecoverableProfile(email, role) : null;
+    if (savedProfile) {
+      try {
+        await createAccount(role, savedProfile, password);
+        await loadRegisteredMentors();
+        showToast('Your saved account was restored. You are now logged in.', 'success');
+        return role === 'mentor' ? goToMentorDashboard() : goToMenteeDashboard();
+      } catch (restoreError) {
+        showToast(restoreError.message || 'Your saved profile could not be restored.', 'error');
+        return;
+      }
+    }
+    showToast(error.message || 'Login failed. Check your email and password.', 'error');
+  }
 }
 
 function openPasswordReset() {
@@ -2223,11 +2263,27 @@ function renderInboxList(role, containerId) {
   `).join('') || '<p style="color:var(--text-muted);">No emails in your inbox yet.</p>';
 }
 
-function renderMentorMails() {
+async function refreshMailbox(role) {
+  const viewer = getMailboxUser(role);
+  if (!viewer.email) return;
+  try {
+    const response = await fetch(`/api/v1/communications/inbox?email=${encodeURIComponent(viewer.email)}`);
+    if (!response.ok) return;
+    const remoteMails = await response.json();
+    if (!Array.isArray(remoteMails)) return;
+    const localOtherMail = state.mails.filter(mail => mail.recipientEmail?.toLowerCase() !== viewer.email.toLowerCase());
+    state.mails = [...remoteMails.map(createMailRecord), ...localOtherMail];
+    syncState();
+  } catch (_) { /* Offline mode retains local inbox items. */ }
+}
+
+async function renderMentorMails() {
+  await refreshMailbox('mentor');
   renderInboxList('mentor', 'mentor-mails-list');
 }
 
-function renderMenteeMails() {
+async function renderMenteeMails() {
+  await refreshMailbox('mentee');
   renderInboxList('mentee', 'mentee-mails-list');
 }
 
@@ -2780,14 +2836,14 @@ async function sendAutomatedEmail(event) {
   if (!emailComposer.recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailComposer.recipientEmail)) {
     return showToast('A valid mentor email is required before sending.', 'error');
   }
-  const payload = { senderRole: emailComposer.role === 'mentee' ? 'student' : 'mentor', senderName: emailComposer.senderName, recipientEmail: emailComposer.recipientEmail, recipientName: emailComposer.recipientName, summary, type };
+  const payload = { senderRole: emailComposer.role === 'mentee' ? 'student' : 'mentor', senderName: emailComposer.senderName, senderEmail: state.currentUser?.email || '', recipientEmail: emailComposer.recipientEmail, recipientName: emailComposer.recipientName, summary, type };
   const submitButton = event.target.querySelector('button[type="submit"]');
   submitButton.disabled = true; submitButton.textContent = 'Creating email…';
   try {
     const response = await fetch('/api/v1/communications/compose-and-send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || 'Could not create the email.');
-    state.mails.unshift(createMailRecord({
+    state.mails.unshift(createMailRecord(result.mail || {
       senderRole: emailComposer.role,
       senderName: emailComposer.senderName,
       senderEmail: state.currentUser?.email || '',

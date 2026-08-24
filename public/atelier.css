@@ -1150,3 +1150,65 @@ body.is-app #screen-dashboard-mentee.screen.active {
     height: 68px !important;
   }
 }
+
+/* Mobile polish: protects the dashboard's inline component layouts on small screens. */
+@media (max-width: 720px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-size: 16px; }
+  body.is-app main.container { padding: 8px; }
+
+  .dashboard-layout,
+  .tab-content-mentor,
+  .tab-content-mentee,
+  .dash-card,
+  .modal-card { min-width: 0; }
+
+  .dash-card { padding: 14px; }
+  .dash-card-title > .btn { max-width: 100%; }
+
+  /* Controls laid out directly in markup become comfortable stacked touch targets. */
+  #real-call-controls > div,
+  #mentee-real-call-controls > div,
+  #chat-messages-mentor + div,
+  #chat-messages-mentee + div,
+  .modal-card [style*="display:flex"] { gap: 8px !important; }
+
+  #real-call-controls .btn,
+  #mentee-real-call-controls .btn { flex: 1 1 calc(50% - 8px); justify-content: center; min-height: 44px; }
+
+  #chat-messages-mentor + div,
+  #chat-messages-mentee + div { flex-wrap: wrap; }
+  #chat-messages-mentor + div .form-input,
+  #chat-messages-mentee + div .form-input { flex: 1 1 100%; }
+  #chat-messages-mentor + div .btn,
+  #chat-messages-mentee + div .btn { width: 100%; justify-content: center; }
+
+  .dash-card [style*="grid-template-columns:1fr 1fr"],
+  .dash-card [style*="grid-template-columns: 1fr 1fr"],
+  .modal-card [style*="grid-template-columns:1fr 1fr"],
+  .modal-card [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+
+  .dash-card [style*="display:flex"] > .btn,
+  .modal-card [style*="display:flex"] > .btn { min-height: 42px; }
+
+  #incoming-call-alert { left: 12px !important; right: 12px !important; bottom: 12px !important; top: auto !important; width: auto !important; }
+  #incoming-call-alert > div:last-child .btn { min-width: 0; font-size: 13px; padding: 10px 8px; }
+
+  #native-video-box-mentor > div,
+  #native-video-box-mentee > div { padding: 18px !important; }
+  #native-video-box-mentor h3,
+  #native-video-box-mentee h3 { font-size: 21px !important; }
+
+  input, select, textarea { max-width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; }
+  .nav-buttons .btn { width: 100%; margin: 0; }
+  .brand-logo { width: 34px; height: 34px; font-size: 13px; }
+
+  #real-call-controls .btn,
+  #mentee-real-call-controls .btn { flex-basis: 100%; }
+  .tab-btn { padding: 9px 11px; }
+  .option-checkbox { padding: 10px; }
+}

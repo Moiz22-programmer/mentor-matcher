@@ -2713,12 +2713,37 @@ function handleSendMessage(role) {
 
 
 let emailComposer = null;
-function openEmailComposer(role, recipientName, recipientEmail) {
+async function resolveMenteeEmailRecipient(current, requestedName, requestedEmail) {
+  // A reply must always return to the original sender, not to a sample or
+  // first-listed mentor. This also keeps mentor addresses correct after reload.
+  if (requestedEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requestedEmail.trim())) {
+    return { name: requestedName || 'Your mentor', email: requestedEmail.trim() };
+  }
+
+  let mentors = state.mentors || [];
+  try {
+    const accounts = await accountRequest('people?role=mentor');
+    mentors = accounts.map(accountToUser);
+    state.mentors = mentors;
+    syncState();
+  } catch (_) { /* The current local mentor list is still a safe fallback. */ }
+
+  const mentor = mentors.find(item => item.id === current?.assignedMentorId)
+    || mentors.find(item => item.email?.toLowerCase() === current?.assignedMentorEmail?.toLowerCase())
+    || mentors.find(item => item.name === current?.assignedMentorName);
+  return mentor ? { name: mentor.name, email: mentor.email } : null;
+}
+
+async function openEmailComposer(role, recipientName, recipientEmail) {
   const current = state.currentUser || (role === 'mentor' ? state.mentors[0] : state.mentees[0]);
+  if (!current) return showToast('Please sign in before sending an email.', 'error');
   const picker = document.getElementById('email-recipient-picker');
   const recipientSelect = document.getElementById('email-composer-recipient-select');
   if (role === 'mentee') {
-    const mentor = state.mentors.find(item => item.id === current.assignedMentorId) || state.mentors[0];
+    const mentor = await resolveMenteeEmailRecipient(current, recipientName, recipientEmail);
+    if (!mentor?.email) {
+      return showToast('Your mentor email could not be found. Please choose or assign a mentor first.', 'error');
+    }
     recipientName = mentor.name;
     recipientEmail = mentor.email;
     picker.style.display = 'none';
@@ -2754,6 +2779,10 @@ async function sendAutomatedEmail(event) {
   if (!emailComposer) return;
   const summary = document.getElementById('email-composer-summary').value.trim();
   const type = document.getElementById('email-composer-type').value;
+  if (!summary) return showToast('Write your message before sending.', 'error');
+  if (!emailComposer.recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailComposer.recipientEmail)) {
+    return showToast('A valid mentor email is required before sending.', 'error');
+  }
   const payload = { senderRole: emailComposer.role === 'mentee' ? 'student' : 'mentor', senderName: emailComposer.senderName, recipientEmail: emailComposer.recipientEmail, recipientName: emailComposer.recipientName, summary, type };
   const submitButton = event.target.querySelector('button[type="submit"]');
   submitButton.disabled = true; submitButton.textContent = 'Creating email…';
@@ -2774,7 +2803,7 @@ async function sendAutomatedEmail(event) {
     }));
     if (emailComposer.role === 'mentee') recordStudentActivity('Sent an AI-written work update to mentor', 15);
     syncState(); closeModal('modal-email-composer');
-    showToast(result.delivery === 'sent' ? 'AI created and sent your email.' : 'AI drafted your email. Add RESEND_API_KEY to deliver it.', result.delivery === 'sent' ? 'success' : 'info');
+    showToast(result.delivery === 'sent' ? `Email sent to ${emailComposer.recipientName}.` : 'AI drafted your email. Add RESEND_API_KEY to deliver it.', result.delivery === 'sent' ? 'success' : 'info');
     if (state.role === 'mentor') renderMentorMails();
     else renderMenteeMails();
   } catch (error) {

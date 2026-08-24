@@ -6,7 +6,10 @@
 
 // Dynamic backend configuration and fetch override
 (function() {
-  let backendUrl = localStorage.getItem('mm_backend_url') || sessionStorage.getItem('mm_fetched_backend_url') || '';
+  // Only use a backend address explicitly supplied by this deployment. A
+  // previously saved browser address can point to an old temporary server,
+  // making newly registered accounts appear to disappear after reopening.
+  let backendUrl = sessionStorage.getItem('mm_fetched_backend_url') || '';
 
   function applyOverride(url) {
     if (!url) return;
@@ -29,10 +32,6 @@
     };
   }
 
-  if (backendUrl) {
-    applyOverride(backendUrl);
-  }
-
   // Fetch target backend URL from serverless endpoint on startup
   window.fetch('/api/v1/config')
     .then(res => res.json())
@@ -41,9 +40,7 @@
         const fetchedUrl = data.backendUrl.trim();
         if (fetchedUrl && fetchedUrl !== sessionStorage.getItem('mm_fetched_backend_url')) {
           sessionStorage.setItem('mm_fetched_backend_url', fetchedUrl);
-          if (!localStorage.getItem('mm_backend_url')) {
-            applyOverride(fetchedUrl);
-          }
+          applyOverride(fetchedUrl);
         }
       }
     })

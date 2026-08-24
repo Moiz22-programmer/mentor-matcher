@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { LoginDto, RegisterAccountDto, UpdateProfileDto } from './dto/account.dto';
 import { RequestPasswordResetDto, ResetPasswordDto } from './dto/account.dto';
@@ -13,7 +13,9 @@ export class AccountsService {
   private readonly dataPath = process.env.ACCOUNTS_JSON_PATH || join(process.cwd(), 'data', 'accounts.json');
   private accounts: Account[];
   private readonly passwordResets = new Map<string, { codeHash: string; expiresAt: number }>();
-  private readonly tokenSecret = process.env.AUTH_SECRET || randomBytes(32).toString('hex');
+  // Keep development sessions stable across an ordinary server restart. In
+  // production AUTH_SECRET should always be supplied as an environment secret.
+  private readonly tokenSecret = process.env.AUTH_SECRET || 'mentor-matcher-local-development-secret-change-before-production';
 
   constructor(private readonly email: EmailService) { this.accounts = this.load(); }
 
@@ -104,7 +106,11 @@ export class AccountsService {
     try {
       const directory = dirname(this.dataPath);
       if (!existsSync(directory)) mkdirSync(directory, { recursive: true });
-      writeFileSync(this.dataPath, JSON.stringify(this.accounts, null, 2), 'utf8');
+      // Atomic replacement avoids an empty/corrupt accounts file if the app is
+      // closed while an account is being created.
+      const temporaryPath = `${this.dataPath}.tmp`;
+      writeFileSync(temporaryPath, JSON.stringify(this.accounts, null, 2), 'utf8');
+      renameSync(temporaryPath, this.dataPath);
     } catch (error) {
       console.warn(
         `[AccountsService] Warning: Could not write accounts to ${this.dataPath}. ` +
